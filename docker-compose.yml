@@ -1,0 +1,74 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: pos_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-pos_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-pos_password_secret}
+      POSTGRES_DB: ${POSTGRES_DB:-pos_db}
+    ports:
+      - "${POSTGRES_PORT:-5435}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-pos_user} -d ${POSTGRES_DB:-pos_db}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - pos_network
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      target: development
+    container_name: pos_backend
+    restart: unless-stopped
+    ports:
+      - "${BACKEND_PORT:-3005}:3000"
+    environment:
+      PORT: 3000
+      NODE_ENV: development
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: ${POSTGRES_USER:-pos_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-pos_password_secret}
+      POSTGRES_DB: ${POSTGRES_DB:-pos_db}
+      JWT_SECRET: ${JWT_SECRET:-super_secret_pos_jwt_key_2026}
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - pos_network
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      target: development
+    container_name: pos_frontend
+    restart: unless-stopped
+    ports:
+      - "${FRONTEND_PORT:-5175}:5173"
+    environment:
+      - VITE_API_BASE_URL=http://localhost:${BACKEND_PORT:-3005}/api
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    depends_on:
+      - backend
+    networks:
+      - pos_network
+
+volumes:
+  postgres_data:
+    driver: local
+
+networks:
+  pos_network:
+    driver: bridge

@@ -1,0 +1,327 @@
+:root {
+  /* Coffee Palette Theme Colors */
+  --primary: #794022;          /* Rich Roasted Coffee / Main Brand */
+  --primary-hover: #591F0B;    /* Deep Espresso Roast */
+  --primary-dark: #492310;     /* Dark Roast Espresso */
+  --primary-light: #F7EFE8;   /* Warm Oat Milk / Crema Tint */
+  --primary-50: #FCF9F5;      /* Ultra Soft Crema Foam */
+  --primary-100: #F3E5D8;     /* Light Latte Foam */
+  --primary-border: #DEAC76;   /* Honey Crema Border */
+
+  --accent-gold: #D99937;     /* Golden Toffee / Amber Glow */
+  --accent-caramel: #B57537;  /* Caramel Macchiato */
+  --accent-cinnamon: #9D673A; /* Cinnamon Roast */
+  --accent-tan: #9E7148;      /* Mocha Milk */
+  --accent-sand: #C6A988;     /* Sand Oat */
+  --accent-cream: #E8C5A5;    /* Cream Caramel */
+
+  --success: #2D6A4F;         /* Artisanal Sage Green (Coffee Leaf) */
+  --success-dark: #1B4332;
+  --success-light: #E8F5E9;
+  --success-border: #A3D9A5;
+
+  --warning: #D99937;         /* Golden Amber */
+  --warning-dark: #B57537;
+  --warning-light: #FFF8EE;
+  --warning-border: #FAD7A0;
+
+  --danger: #B9381E;          /* Warm Roasted Rust Red */
+  --danger-dark: #8C220E;
+  --danger-light: #FDF2F0;
+  --danger-border: #F7C0B8;
+
+  --dark: #2C2221;            /* Deep Espresso Charcoal */
+  --gray-900: #0B0D0C;        /* Dark Charcoal Noir */
+  --gray-800: #2C2221;        /* Espresso Bean */
+  --gray-700: #492310;        /* Deep Roast */
+  --gray-600: #6B372B;        /* Warm Cocoa Mocha */
+  --gray-500: #9E7148;        /* Medium Roast */
+  --gray-400: #C5B5A6;        /* Warm Taupe */
+  --gray-300: #DCD0C4;        /* Soft Oat Border */
+  --gray-200: #EFE7DC;        /* Warm Crema Divider */
+  --gray-100: #F7F2EB;        /* Warm Linen Card Background */
+  --gray-50: #FAF7F2;         /* Warm Artisan Paper Canvas */
+  --white: #FFFFFF;
+
+  /* Layout & Sizing */
+  --sidebar-width: 260px;
+  --header-height: 68px;
+  --border-radius-sm: 8px;
+  --border-radius: 12px;
+  --border-radius-lg: 16px;
+  --border-radius-xl: 20px;
+  --border-radius-full: 9999px;
+
+  /* Elevation Shadows with Warm Coffee Tint */
+  --shadow-xs: 0 1px 2px rgba(44, 34, 33, 0.04);
+  --shadow-sm: 0 1px 3px rgba(44, 34, 33, 0.06), 0 1px 2px rgba(44, 34, 33, 0.03);
+  --shadow-md: 0 4px 12px -2px rgba(44, 34, 33, 0.08), 0 2px 6px -1px rgba(44, 34, 33, 0.04);
+  --shadow-lg: 0 12px 24px -4px rgba(44, 34, 33, 0.1), 0 4px 12px -2px rgba(44, 34, 33, 0.05);
+  --shadow-xl: 0 20px 32px -6px rgba(44, 34, 33, 0.14), 0 8px 16px -4px rgba(44, 34, 33, 0.06);
+}
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Kantumruy+Pro:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap');
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Kantumruy Pro', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Hanuman', 'Battambang', 'Siemreap', sans-serif;
+  background-color: var(--gray-50);
+  color: var(--gray-900);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* App Layout */
+.app-container {
+  display: flex;
+  min-height: 100vh;
+}
+
+.main-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.page-wrapper {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1.5rem;
+}
+
+/* Navigation Header */
+.header-nav {
+  height: var(--header-height);
+  background: rgba(255, 255, 255, 0.96);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--gray-200);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 1.5rem;
+  z-index: 20;
+}
+
+.brand-logo {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-weight: 700;
+  font-size: 1.25rem;
+  color: var(--dark);
+  text-decoration: none;
+}
+
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--gray-600);
+  text-decoration: none;
+  transition: all 0.18s ease;
+}
+
+.nav-item:hover {
+  background-color: var(--gray-100);
+  color: var(--gray-900);
+}
+
+.nav-item.router-link-active {
+  background-color: var(--primary-light);
+  color: var(--primary);
+  font-weight: 700;
+}
+
+/* Buttons */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.6rem 1.25rem;
+  font-size: 0.88rem;
+  font-weight: 600;
+  border-radius: 10px;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1);
+  user-select: none;
+}
+
+.btn:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+.btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #794022 0%, #591F0B 100%);
+  color: var(--white);
+  border: 1px solid #794022;
+  box-shadow: 0 3px 10px rgba(121, 64, 34, 0.32);
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: linear-gradient(135deg, #591F0B 0%, #3D1407 100%);
+  border-color: #591F0B;
+  box-shadow: 0 6px 16px rgba(89, 31, 11, 0.42);
+}
+
+.btn-success {
+  background: linear-gradient(135deg, #2D6A4F 0%, #1B4332 100%);
+  color: var(--white);
+  box-shadow: 0 2px 8px rgba(45, 106, 79, 0.28);
+}
+
+.btn-success:hover:not(:disabled) {
+  background: linear-gradient(135deg, #1B4332 0%, #0F281E 100%);
+  box-shadow: 0 4px 14px rgba(27, 67, 50, 0.38);
+}
+
+.btn-secondary {
+  background-color: var(--white);
+  border-color: var(--gray-300);
+  color: var(--primary-dark);
+  box-shadow: var(--shadow-xs);
+  font-weight: 600;
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background-color: var(--primary-50);
+  color: var(--primary);
+  border-color: var(--primary-border);
+}
+
+.btn-outline-primary {
+  background-color: var(--white);
+  border: 1px solid var(--primary);
+  color: var(--primary);
+  font-weight: 600;
+  box-shadow: var(--shadow-xs);
+}
+
+.btn-outline-primary:hover:not(:disabled) {
+  background-color: var(--primary-light);
+  color: var(--primary-dark);
+  border-color: var(--primary-dark);
+}
+
+.btn-danger {
+  background-color: var(--danger);
+  color: var(--white);
+  box-shadow: 0 2px 6px rgba(185, 56, 30, 0.25);
+}
+
+.btn-danger:hover:not(:disabled) {
+  background-color: var(--danger-dark);
+  box-shadow: 0 4px 12px rgba(140, 34, 14, 0.35);
+}
+
+/* Cards */
+.card {
+  background: var(--white);
+  border-radius: var(--border-radius);
+  border: 1px solid var(--gray-200);
+  padding: 1.25rem;
+  box-shadow: var(--shadow-sm);
+  transition: box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+/* Badges */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.65rem;
+  border-radius: var(--border-radius-full);
+  font-size: 0.75rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.badge-success {
+  background-color: var(--success-light);
+  color: var(--success-dark);
+  border: 1px solid var(--success-border);
+}
+
+.badge-coffee {
+  background-color: var(--primary-50);
+  color: var(--primary);
+  border: 1px solid var(--primary-border);
+}
+
+.badge-warning {
+  background-color: var(--warning-light);
+  color: var(--warning-dark);
+  border: 1px solid var(--warning-border);
+}
+
+.badge-danger {
+  background-color: var(--danger-light);
+  color: var(--danger-dark);
+  border: 1px solid var(--danger-border);
+}
+
+/* Form Inputs */
+.input-group {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.input-field {
+  width: 100%;
+  padding: 0.65rem 1rem;
+  font-size: 0.88rem;
+  border-radius: 10px;
+  border: 1.5px solid var(--gray-200);
+  background-color: var(--white);
+  color: var(--gray-900);
+  outline: none;
+  transition: all 0.18s ease;
+}
+
+.input-field:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(121, 64, 34, 0.15);
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--gray-300);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--gray-400);
+}
