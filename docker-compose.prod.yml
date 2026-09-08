@@ -53,7 +53,7 @@ services:
     container_name: pos_frontend_prod
     restart: unless-stopped
     ports:
-      - "${FRONTEND_PROD_PORT:-8080}:80"
+      - "${FRONTEND_PROD_PORT:-8085}:80"
     depends_on:
       - backend_prod
     networks:

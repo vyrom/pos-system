@@ -83,7 +83,7 @@ npm run prod:docker
 docker compose -f docker-compose.prod.yml up -d --build
 ```
 
-- **Production Frontend UI (Nginx Gzip)**: [http://localhost:8080](http://localhost:8080)
+- **Production Frontend UI (Nginx Gzip)**: [http://localhost:8085](http://localhost:8085)
 - **Production Backend API**: [http://localhost:3006/api](http://localhost:3006/api)
 - **Production Swagger API Docs**: [http://localhost:3006/api/docs](http://localhost:3006/api/docs)
 - **Production PostgreSQL Database**: `localhost:5436`
