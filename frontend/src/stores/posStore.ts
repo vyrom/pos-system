@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia';
-import { posApi, getApiErrorMessage, Product, Ingredient, CartItem, CreateOrderPayload, DrinkCustomization, ToppingOption } from '../services/api';
+import { posApi, getApiErrorMessage, Product, Ingredient, CategoryEntity, CartItem, CreateOrderPayload, DrinkCustomization, ToppingOption } from '../services/api';
 
 export type PromotionType = 'BOGO_ALL' | 'BOGO_CUSTOM' | 'BUY_2_GET_1' | 'PERCENTAGE' | 'FIXED';
 
@@ -248,6 +248,8 @@ export const usePosStore = defineStore('pos', {
   state: () => ({
     products: [] as Product[],
     categories: ['All'] as string[],
+    categoriesDetails: [] as CategoryEntity[],
+    categoryLoading: false,
     selectedCategory: (typeof localStorage !== 'undefined' ? localStorage.getItem('pos_selected_category') : null) || 'All',
     searchQuery: '',
     
@@ -555,6 +557,78 @@ export const usePosStore = defineStore('pos', {
         this.error = err.message || 'Failed to fetch ingredients';
       } finally {
         this.isLoading = false;
+      }
+    },
+
+    async fetchCategoriesDetails() {
+      this.categoryLoading = true;
+      try {
+        const data = await posApi.getCategoriesDetails();
+        this.categoriesDetails = data;
+      } catch (err: any) {
+        console.error('Failed to fetch category details:', err);
+      } finally {
+        this.categoryLoading = false;
+      }
+    },
+
+    async createCategory(categoryData: Partial<CategoryEntity>) {
+      this.isSubmitting = true;
+      try {
+        const newCat = await posApi.createCategory(categoryData);
+        await this.loadInitialData();
+        await this.fetchCategoriesDetails();
+        return newCat;
+      } catch (err: any) {
+        this.error = getApiErrorMessage(err);
+        throw err;
+      } finally {
+        this.isSubmitting = false;
+      }
+    },
+
+    async updateCategory(id: string, categoryData: Partial<CategoryEntity>) {
+      this.isSubmitting = true;
+      try {
+        const updated = await posApi.updateCategory(id, categoryData);
+        await this.loadInitialData();
+        await this.fetchCategoriesDetails();
+        return updated;
+      } catch (err: any) {
+        this.error = getApiErrorMessage(err);
+        throw err;
+      } finally {
+        this.isSubmitting = false;
+      }
+    },
+
+    async toggleCategoryStatus(id: string) {
+      try {
+        const updated = await posApi.toggleCategoryStatus(id);
+        const idx = this.categoriesDetails.findIndex((c) => c.id === id);
+        if (idx !== -1) {
+          this.categoriesDetails[idx].isEnabled = updated.isEnabled;
+        }
+        await this.loadInitialData();
+        return updated;
+      } catch (err: any) {
+        this.error = getApiErrorMessage(err);
+        throw err;
+      }
+    },
+
+    async deleteCategory(id: string) {
+      this.isSubmitting = true;
+      try {
+        const res = await posApi.deleteCategory(id);
+        await this.loadInitialData();
+        await this.fetchCategoriesDetails();
+        return res;
+      } catch (err: any) {
+        this.error = getApiErrorMessage(err);
+        throw err;
+      } finally {
+        this.isSubmitting = false;
       }
     },
 

@@ -2,11 +2,13 @@ import { Injectable, NotFoundException, BadRequestException } from '@nestjs/comm
 import { Product } from './entities/product.entity';
 import { Ingredient } from './entities/ingredient.entity';
 import { Expense } from './entities/expense.entity';
+import { CategoryEntity } from './entities/category.entity';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { CreateIngredientDto, RestockIngredientDto } from './dto/create-ingredient.dto';
 import { CreateExpenseDto } from './dto/create-expense.dto';
+import { CreateCategoryDto, UpdateCategoryDto } from './dto/create-category.dto';
 import { INITIAL_INGREDIENTS_SEED, RECIPE_PRODUCTS_SEED } from './seeds/recipe-products.data';
 import {
   ImageProcessorService,
@@ -21,6 +23,14 @@ export class PosService {
   private ingredients: Ingredient[] = JSON.parse(JSON.stringify(INITIAL_INGREDIENTS_SEED));
   private products: Product[] = JSON.parse(JSON.stringify(RECIPE_PRODUCTS_SEED));
   private orders: any[] = [];
+  private categoriesState: CategoryEntity[] = [
+    { id: 'cat-1', name: 'Ice Coffee', nameKh: 'កាហ្វេទឹកកក', icon: '🧊', isEnabled: true, createdAt: new Date().toISOString() },
+    { id: 'cat-2', name: 'Hot Coffee', nameKh: 'កាហ្វេក្តៅ', icon: '☕', isEnabled: true, createdAt: new Date().toISOString() },
+    { id: 'cat-3', name: 'Tea & Milk Tea', nameKh: 'តែ & តែទឹកដោះគោ', icon: '🧋', isEnabled: true, createdAt: new Date().toISOString() },
+    { id: 'cat-4', name: 'Smoothie & Soda', nameKh: 'ស្មូទី & សូដា', icon: '🍹', isEnabled: true, createdAt: new Date().toISOString() },
+    { id: 'cat-5', name: 'Non-Coffee', nameKh: 'ភេសជ្ជៈគ្មានកាហ្វេអ៊ីន', icon: '🥛', isEnabled: true, createdAt: new Date().toISOString() },
+    { id: 'cat-6', name: 'Bakery & Snacks', nameKh: 'នំ & អាហារសម្រន់', icon: '🥐', isEnabled: true, createdAt: new Date().toISOString() },
+  ];
   private expenses: Expense[] = [
     {
       id: 'exp-1',
@@ -172,7 +182,13 @@ export class PosService {
     return minCups === Infinity ? 0 : minCups;
   }
 
-  getProducts(category?: string, search?: string): Product[] {
+  getProducts(category?: string, search?: string, includeDisabled = false): Product[] {
+    const disabledCatNames = new Set(
+      this.categoriesState
+        .filter((c) => c.isEnabled === false)
+        .map((c) => c.name.toLowerCase()),
+    );
+
     let result = this.products.map((p) => {
       const availableStock = this.calculateAvailableCups(p);
       return {
@@ -181,12 +197,16 @@ export class PosService {
       };
     });
 
+    if (!includeDisabled) {
+      result = result.filter((p) => !disabledCatNames.has(p.category.toLowerCase()));
+    }
+
     if (category && category.toLowerCase() !== 'all') {
       result = result.filter((p) => p.category.toLowerCase() === category.toLowerCase());
     }
     if (search && search.trim() !== '') {
       const q = search.toLowerCase().trim();
-      result = result.filter((p) => p.name.toLowerCase().includes(q) || p.sku.toLowerCase().includes(q));
+      result = result.filter((p) => p.name.toLowerCase().includes(q) || (p.sku && p.sku.toLowerCase().includes(q)));
     }
     return result;
   }
@@ -203,8 +223,119 @@ export class PosService {
   }
 
   getCategories(): string[] {
-    const categories = Array.from(new Set(this.products.map((p) => p.category)));
-    return ['All', ...categories];
+    const disabledCatNames = new Set(
+      this.categoriesState
+        .filter((c) => c.isEnabled === false)
+        .map((c) => c.name.toLowerCase()),
+    );
+    const enabledCatNames = this.categoriesState
+      .filter((c) => c.isEnabled !== false)
+      .map((c) => c.name);
+
+    const productCategories = Array.from(new Set(this.products.map((p) => p.category)));
+    for (const pCat of productCategories) {
+      if (
+        !disabledCatNames.has(pCat.toLowerCase()) &&
+        !enabledCatNames.some((c) => c.toLowerCase() === pCat.toLowerCase())
+      ) {
+        enabledCatNames.push(pCat);
+      }
+    }
+    return ['All', ...enabledCatNames];
+  }
+
+  getCategoriesDetails(): CategoryEntity[] {
+    return this.categoriesState.map((cat) => {
+      const itemCount = this.products.filter(
+        (p) => p.category.toLowerCase() === cat.name.toLowerCase(),
+      ).length;
+      return {
+        ...cat,
+        itemCount,
+      };
+    });
+  }
+
+  createCategory(dto: CreateCategoryDto): CategoryEntity {
+    const existing = this.categoriesState.find(
+      (c) => c.name.toLowerCase() === dto.name.trim().toLowerCase(),
+    );
+    if (existing) {
+      throw new BadRequestException(`Category "${dto.name}" already exists`);
+    }
+
+    const newCategory: CategoryEntity = {
+      id: `cat-${Date.now()}`,
+      name: dto.name.trim(),
+      nameKh: dto.nameKh ? dto.nameKh.trim() : dto.name.trim(),
+      icon: dto.icon ? dto.icon.trim() : '☕',
+      isEnabled: dto.isEnabled !== undefined ? dto.isEnabled : true,
+      itemCount: 0,
+      createdAt: new Date().toISOString(),
+    };
+
+    this.categoriesState.push(newCategory);
+    return newCategory;
+  }
+
+  updateCategory(id: string, dto: UpdateCategoryDto): CategoryEntity {
+    const catIndex = this.categoriesState.findIndex((c) => c.id === id);
+    if (catIndex === -1) {
+      throw new NotFoundException(`Category with ID ${id} not found`);
+    }
+
+    const currentCat = this.categoriesState[catIndex];
+    const oldName = currentCat.name;
+
+    if (dto.name && dto.name.trim().toLowerCase() !== oldName.toLowerCase()) {
+      const duplicate = this.categoriesState.find(
+        (c) => c.id !== id && c.name.toLowerCase() === dto.name!.trim().toLowerCase(),
+      );
+      if (duplicate) {
+        throw new BadRequestException(`Category "${dto.name}" already exists`);
+      }
+
+      const newName = dto.name.trim();
+      this.products.forEach((p) => {
+        if (p.category.toLowerCase() === oldName.toLowerCase()) {
+          p.category = newName;
+        }
+      });
+      currentCat.name = newName;
+    }
+
+    if (dto.nameKh !== undefined) currentCat.nameKh = dto.nameKh.trim();
+    if (dto.icon !== undefined) currentCat.icon = dto.icon.trim();
+    if (dto.isEnabled !== undefined) currentCat.isEnabled = dto.isEnabled;
+
+    const itemCount = this.products.filter(
+      (p) => p.category.toLowerCase() === currentCat.name.toLowerCase(),
+    ).length;
+
+    this.categoriesState[catIndex] = { ...currentCat, itemCount };
+    return this.categoriesState[catIndex];
+  }
+
+  toggleCategoryStatus(id: string): CategoryEntity {
+    const cat = this.categoriesState.find((c) => c.id === id);
+    if (!cat) {
+      throw new NotFoundException(`Category with ID ${id} not found`);
+    }
+    cat.isEnabled = !cat.isEnabled;
+    const itemCount = this.products.filter(
+      (p) => p.category.toLowerCase() === cat.name.toLowerCase(),
+    ).length;
+    return { ...cat, itemCount };
+  }
+
+  deleteCategory(id: string): { success: boolean; message: string } {
+    const index = this.categoriesState.findIndex((c) => c.id === id);
+    if (index === -1) {
+      throw new NotFoundException(`Category with ID ${id} not found`);
+    }
+    const cat = this.categoriesState[index];
+    this.categoriesState.splice(index, 1);
+    return { success: true, message: `Category "${cat.name}" deleted successfully` };
   }
 
   createProduct(dto: CreateProductDto): Product {

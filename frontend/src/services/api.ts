@@ -90,12 +90,23 @@ export interface Product {
 export interface Ingredient {
   id: string;
   name: string;
+  nameKh?: string;
   category: string;
   stock: number;
   uom: string;
   costPerUnit: number;
   minStock: number;
   icon?: string;
+}
+
+export interface CategoryEntity {
+  id: string;
+  name: string;
+  nameKh?: string;
+  icon?: string;
+  isEnabled: boolean;
+  itemCount?: number;
+  createdAt?: string;
 }
 
 export interface ToppingOption {
@@ -150,6 +161,8 @@ export interface DashboardMetrics {
   totalCupsCapacity?: number;
   lowStockIngredientsCount?: number;
   ingredientValuation?: number;
+  inventoryCost?: number;
+  inventoryValuation?: number;
   recentOrders: any[];
 }
 
@@ -317,6 +330,31 @@ export const posApi = {
 
   getCategories: async (): Promise<string[]> => {
     const res = await api.get('/pos/categories');
+    return res.data;
+  },
+
+  getCategoriesDetails: async (): Promise<CategoryEntity[]> => {
+    const res = await api.get('/pos/categories/manage');
+    return res.data;
+  },
+
+  createCategory: async (categoryData: Partial<CategoryEntity>): Promise<CategoryEntity> => {
+    const res = await api.post('/pos/categories', categoryData);
+    return res.data;
+  },
+
+  updateCategory: async (id: string, categoryData: Partial<CategoryEntity>): Promise<CategoryEntity> => {
+    const res = await api.patch(`/pos/categories/${id}`, categoryData);
+    return res.data;
+  },
+
+  toggleCategoryStatus: async (id: string): Promise<CategoryEntity> => {
+    const res = await api.patch(`/pos/categories/${id}/toggle`);
+    return res.data;
+  },
+
+  deleteCategory: async (id: string): Promise<{ success: boolean; message?: string }> => {
+    const res = await api.delete(`/pos/categories/${id}`);
     return res.data;
   },
 

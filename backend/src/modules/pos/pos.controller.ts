@@ -20,9 +20,11 @@ import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { CreateIngredientDto, RestockIngredientDto } from './dto/create-ingredient.dto';
 import { CreateExpenseDto } from './dto/create-expense.dto';
+import { CreateCategoryDto, UpdateCategoryDto } from './dto/create-category.dto';
 import { Product } from './entities/product.entity';
 import { Ingredient } from './entities/ingredient.entity';
 import { Expense } from './entities/expense.entity';
+import { CategoryEntity } from './entities/category.entity';
 import { UploadedFilePayload } from './services/image-processor.service';
 
 @ApiTags('POS')
@@ -190,10 +192,48 @@ export class PosController {
   }
 
   @Get('categories')
-  @ApiOperation({ summary: 'Get list of product categories' })
-  @ApiResponse({ status: 200, description: 'List of categories', type: [String] })
+  @ApiOperation({ summary: 'Get list of active product categories for cashier POS' })
+  @ApiResponse({ status: 200, description: 'List of active category names', type: [String] })
   getCategories(): string[] {
     return this.posService.getCategories();
+  }
+
+  @Get('categories/manage')
+  @ApiOperation({ summary: 'Get full list of categories with item counts & enabled status for Admin management' })
+  @ApiResponse({ status: 200, description: 'List of category details', type: [CategoryEntity] })
+  getCategoriesDetails(): CategoryEntity[] {
+    return this.posService.getCategoriesDetails();
+  }
+
+  @Post('categories')
+  @ApiOperation({ summary: 'Create a new category' })
+  @ApiResponse({ status: 201, description: 'Category created successfully', type: CategoryEntity })
+  createCategory(@Body() dto: CreateCategoryDto): CategoryEntity {
+    return this.posService.createCategory(dto);
+  }
+
+  @Patch('categories/:id')
+  @ApiOperation({ summary: 'Update an existing category' })
+  @ApiResponse({ status: 200, description: 'Category updated successfully', type: CategoryEntity })
+  updateCategory(
+    @Param('id') id: string,
+    @Body() dto: UpdateCategoryDto,
+  ): CategoryEntity {
+    return this.posService.updateCategory(id, dto);
+  }
+
+  @Patch('categories/:id/toggle')
+  @ApiOperation({ summary: 'Toggle category enabled/disabled status' })
+  @ApiResponse({ status: 200, description: 'Category status toggled', type: CategoryEntity })
+  toggleCategoryStatus(@Param('id') id: string): CategoryEntity {
+    return this.posService.toggleCategoryStatus(id);
+  }
+
+  @Delete('categories/:id')
+  @ApiOperation({ summary: 'Delete a category' })
+  @ApiResponse({ status: 200, description: 'Category deleted successfully' })
+  deleteCategory(@Param('id') id: string) {
+    return this.posService.deleteCategory(id);
   }
 
   // ==================== POS ORDERS ====================

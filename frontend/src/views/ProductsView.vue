@@ -13,6 +13,10 @@
           <Sprout v-else :size="16" />
           <span>{{ t('prod.seedBtn') }}</span>
         </button>
+        <button class="btn btn-secondary manage-cat-btn" @click="openCategoryModal">
+          <FolderCog :size="16" />
+          <span>{{ t('prod.manageCategories') }}</span>
+        </button>
         <button class="btn btn-primary add-product-btn" @click="openAddModal">
           <Plus :size="18" />
           <span>{{ t('prod.addBtn') }}</span>
@@ -614,6 +618,148 @@
         </div>
       </div>
     </div>
+
+    <!-- CATEGORY MANAGEMENT MODAL -->
+    <div v-if="showCategoryModal" class="modal-backdrop" @click.self="closeCategoryModal">
+      <div class="category-modal">
+        <div class="modal-header">
+          <div>
+            <h2 class="modal-title flex-center-gap">
+              <FolderCog :size="22" class="text-amber" />
+              <span>{{ t('cat.manageTitle') }}</span>
+            </h2>
+            <p class="modal-subtitle">{{ t('cat.manageSub') }}</p>
+          </div>
+          <button class="btn-close" @click="closeCategoryModal">
+            <X :size="20" />
+          </button>
+        </div>
+
+        <div class="modal-body category-modal-body">
+          <!-- Add / Edit Category Form -->
+          <div class="cat-form-card">
+            <h4 class="cat-form-title font-bold text-coffee">
+              {{ isEditingCat ? t('cat.editCat') : t('cat.addCat') }}
+            </h4>
+            <div class="cat-form-grid">
+              <div class="form-group">
+                <label class="form-label">{{ t('cat.nameEn') }}</label>
+                <input
+                  type="text"
+                  v-model="catFormData.name"
+                  placeholder="e.g. Ice Coffee"
+                  class="input-field"
+                />
+              </div>
+              <div class="form-group">
+                <label class="form-label">{{ t('cat.nameKm') }}</label>
+                <input
+                  type="text"
+                  v-model="catFormData.nameKh"
+                  placeholder="ឧ. កាហ្វេទឹកកក"
+                  class="input-field"
+                />
+              </div>
+              <div class="form-group sm-group">
+                <label class="form-label">{{ t('cat.icon') }}</label>
+                <input
+                  type="text"
+                  v-model="catFormData.icon"
+                  placeholder="☕"
+                  class="input-field text-center"
+                />
+              </div>
+              <div class="cat-form-actions">
+                <button
+                  type="button"
+                  class="btn btn-primary btn-sm"
+                  @click="handleSaveCategory"
+                  :disabled="!catFormData.name.trim()"
+                >
+                  <Plus v-if="!isEditingCat" :size="14" />
+                  <Check v-else :size="14" />
+                  <span>{{ isEditingCat ? t('common.save') : t('common.add') }}</span>
+                </button>
+                <button
+                  v-if="isEditingCat"
+                  type="button"
+                  class="btn btn-secondary btn-sm"
+                  @click="resetCatForm"
+                >
+                  <span>{{ t('common.cancel') }}</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Category List Table -->
+          <div class="cat-list-container">
+            <div v-if="posStore.categoryLoading" class="loading-container p-4">
+              <Loader2 class="spinner" :size="24" />
+            </div>
+            <div v-else class="cat-table-wrapper">
+              <table class="cat-table">
+                <thead>
+                  <tr>
+                    <th>Category</th>
+                    <th>Item Count</th>
+                    <th>Status (POS Visibility)</th>
+                    <th class="text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="cat in categoriesDetails" :key="cat.id" :class="{ 'row-disabled': !cat.isEnabled }">
+                    <td>
+                      <div class="cat-cell-name">
+                        <span class="cat-emoji-badge">{{ cat.icon || '☕' }}</span>
+                        <div>
+                          <div class="cat-main-name font-bold">{{ cat.name }}</div>
+                          <div v-if="cat.nameKh" class="cat-sub-name text-muted">{{ cat.nameKh }}</div>
+                        </div>
+                      </div>
+                    </td>
+                    <td>
+                      <span class="badge badge-neutral font-mono">{{ cat.itemCount || 0 }} {{ t('cat.itemsCount') }}</span>
+                    </td>
+                    <td>
+                      <div class="toggle-status-wrapper" @click="handleToggleCategory(cat)">
+                        <button
+                          type="button"
+                          class="toggle-switch-btn"
+                          :class="{ active: cat.isEnabled }"
+                          :title="cat.isEnabled ? t('cat.enabled') : t('cat.disabled')"
+                        >
+                          <span class="toggle-slider"></span>
+                        </button>
+                        <span class="toggle-label" :class="cat.isEnabled ? 'text-enabled' : 'text-disabled'">
+                          {{ cat.isEnabled ? t('cat.enabled') : t('cat.disabled') }}
+                        </span>
+                      </div>
+                    </td>
+                    <td>
+                      <div class="actions-cell flex-end-gap">
+                        <button class="icon-btn edit" @click="startEditCategory(cat)" title="Edit Category">
+                          <Edit3 :size="16" />
+                        </button>
+                        <button class="icon-btn delete" @click="handleDeleteCategory(cat)" title="Delete Category">
+                          <Trash2 :size="16" />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" @click="closeCategoryModal">
+            {{ t('common.close') }}
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -641,6 +787,7 @@ import {
   UploadCloud,
   ImageIcon,
   Sparkles,
+  FolderCog,
 } from 'lucide-vue-next';
 import { posApi, Product, RecipeItem, getProductImageUrl } from '../services/api';
 import { usePosStore } from '../stores/posStore';
@@ -663,6 +810,97 @@ const seeding = ref(false);
 const showModal = ref(false);
 const isCreating = ref(true);
 const editingProductId = ref<string | null>(null);
+
+// Category Management Modal state
+const showCategoryModal = ref(false);
+const categoriesDetails = computed(() => posStore.categoriesDetails);
+const editingCategory = ref<any | null>(null);
+const isEditingCat = ref(false);
+const catFormData = ref({
+  id: '',
+  name: '',
+  nameKh: '',
+  icon: '☕',
+  isEnabled: true,
+});
+
+const openCategoryModal = async () => {
+  showCategoryModal.value = true;
+  await posStore.fetchCategoriesDetails();
+};
+
+const closeCategoryModal = () => {
+  showCategoryModal.value = false;
+  resetCatForm();
+};
+
+const resetCatForm = () => {
+  catFormData.value = {
+    id: '',
+    name: '',
+    nameKh: '',
+    icon: '☕',
+    isEnabled: true,
+  };
+  isEditingCat.value = false;
+  editingCategory.value = null;
+};
+
+const startEditCategory = (cat: any) => {
+  isEditingCat.value = true;
+  editingCategory.value = cat;
+  catFormData.value = {
+    id: cat.id,
+    name: cat.name,
+    nameKh: cat.nameKh || cat.name,
+    icon: cat.icon || '☕',
+    isEnabled: cat.isEnabled !== false,
+  };
+};
+
+const handleSaveCategory = async () => {
+  if (!catFormData.value.name.trim()) return;
+  try {
+    if (isEditingCat.value && catFormData.value.id) {
+      await posStore.updateCategory(catFormData.value.id, {
+        name: catFormData.value.name,
+        nameKh: catFormData.value.nameKh,
+        icon: catFormData.value.icon,
+        isEnabled: catFormData.value.isEnabled,
+      });
+    } else {
+      await posStore.createCategory({
+        name: catFormData.value.name,
+        nameKh: catFormData.value.nameKh,
+        icon: catFormData.value.icon,
+        isEnabled: catFormData.value.isEnabled,
+      });
+    }
+    resetCatForm();
+    await loadData();
+  } catch (err: any) {
+    alert(err.message || 'Failed to save category');
+  }
+};
+
+const handleToggleCategory = async (cat: any) => {
+  try {
+    await posStore.toggleCategoryStatus(cat.id);
+    await loadData();
+  } catch (err: any) {
+    alert(err.message || 'Failed to toggle category status');
+  }
+};
+
+const handleDeleteCategory = async (cat: any) => {
+  if (!confirm(t('cat.deleteConfirm'))) return;
+  try {
+    await posStore.deleteCategory(cat.id);
+    await loadData();
+  } catch (err: any) {
+    alert(err.message || 'Failed to delete category');
+  }
+};
 
 // Image Upload state
 const fileInputRef = ref<HTMLInputElement | null>(null);
@@ -2063,6 +2301,197 @@ onMounted(() => {
 
 @media (max-width: 768px) {
   .form-grid-2, .form-grid-3, .calc-metrics-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* CATEGORY MANAGEMENT MODAL STYLES */
+.category-modal {
+  background: #ffffff;
+  border-radius: 16px;
+  width: 90%;
+  max-width: 680px;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  overflow: hidden;
+}
+
+.category-modal-body {
+  padding: 1.25rem;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  background: #faf7f2;
+}
+
+.cat-form-card {
+  background: #ffffff;
+  padding: 1rem 1.25rem;
+  border-radius: 12px;
+  border: 1px solid rgba(121, 64, 34, 0.15);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.03);
+}
+
+.cat-form-title {
+  font-size: 0.9rem;
+  margin-bottom: 0.75rem;
+  color: #794022;
+}
+
+.cat-form-grid {
+  display: grid;
+  grid-template-columns: 2fr 2fr 1fr auto;
+  gap: 0.75rem;
+  align-items: end;
+}
+
+.sm-group {
+  max-width: 90px;
+}
+
+.cat-form-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.cat-list-container {
+  background: #ffffff;
+  border-radius: 12px;
+  border: 1px solid rgba(0,0,0,0.08);
+  overflow: hidden;
+}
+
+.cat-table-wrapper {
+  max-height: 340px;
+  overflow-y: auto;
+}
+
+.cat-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: 0.85rem;
+}
+
+.cat-table th {
+  background: #f4efe6;
+  padding: 0.75rem 1rem;
+  font-weight: 700;
+  color: #591f0b;
+  border-bottom: 1px solid rgba(121, 64, 34, 0.12);
+  position: sticky;
+  top: 0;
+  z-index: 2;
+}
+
+.cat-table td {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid rgba(0,0,0,0.05);
+  vertical-align: middle;
+}
+
+.cat-table tr.row-disabled {
+  background-color: #f9fafb;
+  opacity: 0.75;
+}
+
+.cat-cell-name {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.cat-emoji-badge {
+  font-size: 1.3rem;
+  width: 36px;
+  height: 36px;
+  background: #faf7f2;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(121, 64, 34, 0.15);
+}
+
+.cat-main-name {
+  color: #1f2937;
+  font-size: 0.9rem;
+}
+
+.cat-sub-name {
+  font-size: 0.75rem;
+  color: #6b7280;
+}
+
+/* TOGGLE SWITCH STYLES */
+.toggle-status-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  cursor: pointer;
+  user-select: none;
+}
+
+.toggle-switch-btn {
+  position: relative;
+  width: 44px;
+  height: 24px;
+  background-color: #d1d5db;
+  border-radius: 9999px;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.2s ease-in-out;
+  padding: 0;
+}
+
+.toggle-switch-btn.active {
+  background-color: #2d6a4f;
+}
+
+.toggle-slider {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 20px;
+  height: 20px;
+  background-color: #ffffff;
+  border-radius: 50%;
+  transition: transform 0.2s ease-in-out;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+}
+
+.toggle-switch-btn.active .toggle-slider {
+  transform: translateX(20px);
+}
+
+.toggle-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.text-enabled {
+  color: #2d6a4f;
+}
+
+.text-disabled {
+  color: #6b7280;
+}
+
+.flex-center-gap {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.text-amber {
+  color: #794022;
+}
+
+@media (max-width: 640px) {
+  .cat-form-grid {
     grid-template-columns: 1fr;
   }
 }

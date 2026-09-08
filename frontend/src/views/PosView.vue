@@ -290,8 +290,8 @@
             :placeholder="posStore.total.toString()"
             class="cash-input"
           />
-          <span v-if="cashTendered > posStore.total" class="change-preview">
-            {{ t('pos.change') }} ${{ (cashTendered - posStore.total).toFixed(2) }}
+          <span v-if="cashTendered !== null && cashTendered > posStore.total" class="change-preview">
+            {{ t('pos.change') }} ${{ ((cashTendered || 0) - posStore.total).toFixed(2) }}
           </span>
         </div>
 

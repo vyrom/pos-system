@@ -13,11 +13,11 @@ export default defineConfig({
     },
     proxy: {
       '/api': {
-        target: process.env.VITE_BACKEND_URL || 'http://localhost:3000',
+        target: (typeof process !== 'undefined' && process.env?.VITE_BACKEND_URL) || 'http://localhost:3000',
         changeOrigin: true,
       },
       '/uploads': {
-        target: process.env.VITE_BACKEND_URL || 'http://localhost:3000',
+        target: (typeof process !== 'undefined' && process.env?.VITE_BACKEND_URL) || 'http://localhost:3000',
         changeOrigin: true,
       },
     },
