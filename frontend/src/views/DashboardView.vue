@@ -269,8 +269,57 @@
               <span>{{ t('dash.todaySales') }}</span>
             </div>
           </div>
-          <div class="chart-body">
-            <canvas ref="salesChartCanvas"></canvas>
+          <div class="chart-body svg-chart-body">
+            <svg viewBox="0 0 560 180" class="trend-svg" preserveAspectRatio="none">
+              <defs>
+                <linearGradient id="salesGrad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stop-color="#794022" stop-opacity="0.38" />
+                  <stop offset="100%" stop-color="#794022" stop-opacity="0.01" />
+                </linearGradient>
+              </defs>
+
+              <line x1="40" y1="25" x2="520" y2="25" stroke="#f1f5f9" stroke-width="1" />
+              <line x1="40" y1="80" x2="520" y2="80" stroke="#f1f5f9" stroke-width="1" />
+              <line x1="40" y1="135" x2="520" y2="135" stroke="#f1f5f9" stroke-width="1" />
+              <line x1="40" y1="155" x2="520" y2="155" stroke="#e2e8f0" stroke-width="1.5" />
+
+              <path :d="trendPoints.areaD" fill="url(#salesGrad)" />
+              <path
+                :d="trendPoints.pathD"
+                fill="none"
+                stroke="#794022"
+                stroke-width="3"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+
+              <g v-for="p in trendPoints.points" :key="p.hour">
+                <circle
+                  :cx="p.x"
+                  :cy="p.y"
+                  r="5"
+                  fill="#591F0B"
+                  stroke="#FAF7F2"
+                  stroke-width="2.5"
+                  class="svg-point"
+                  @mouseenter="hoveredTrendPoint = p"
+                  @mouseleave="hoveredTrendPoint = null"
+                />
+                <text :x="p.x" y="172" text-anchor="middle" class="svg-axis-label">
+                  {{ p.hour }}
+                </text>
+              </g>
+            </svg>
+
+            <div
+              v-if="hoveredTrendPoint"
+              class="chart-tooltip"
+              :style="{ left: `${(hoveredTrendPoint.x / 560) * 100}%`, top: `${Math.max(10, (hoveredTrendPoint.y / 180) * 100 - 45)}px` }"
+            >
+              <div class="tooltip-title">{{ hoveredTrendPoint.hour }}</div>
+              <div class="tooltip-value">${{ hoveredTrendPoint.sales.toFixed(2) }}</div>
+              <div class="tooltip-sub">{{ hoveredTrendPoint.count }} {{ t('dash.orders') }}</div>
+            </div>
           </div>
         </div>
 
@@ -283,8 +332,48 @@
             </div>
             <PieChart :size="16" class="text-muted" />
           </div>
-          <div class="chart-body doughnut-body">
-            <canvas ref="categoryChartCanvas"></canvas>
+          <div class="chart-body doughnut-container">
+            <div class="doughnut-svg-wrapper">
+              <svg viewBox="0 0 160 160" class="doughnut-svg">
+                <g transform="rotate(-90 80 80)">
+                  <circle
+                    v-for="slice in categoryChartData.slices"
+                    :key="slice.name"
+                    cx="80"
+                    cy="80"
+                    r="60"
+                    fill="none"
+                    :stroke="slice.color"
+                    stroke-width="22"
+                    :stroke-dasharray="slice.strokeDasharray"
+                    :stroke-dashoffset="slice.strokeDashoffset"
+                    class="doughnut-segment"
+                    :class="{ active: hoveredCategorySlice?.name === slice.name }"
+                    @mouseenter="hoveredCategorySlice = slice"
+                    @mouseleave="hoveredCategorySlice = null"
+                  />
+                </g>
+              </svg>
+              <div class="doughnut-center-text">
+                <span class="center-value">{{ hoveredCategorySlice ? hoveredCategorySlice.cups : categoryChartData.totalCups }}</span>
+                <span class="center-label">{{ hoveredCategorySlice ? hoveredCategorySlice.name : t('pos.cups') }}</span>
+              </div>
+            </div>
+
+            <div class="chart-legend-list">
+              <div
+                v-for="slice in categoryChartData.slices"
+                :key="slice.name"
+                class="legend-item"
+                :class="{ active: hoveredCategorySlice?.name === slice.name }"
+                @mouseenter="hoveredCategorySlice = slice"
+                @mouseleave="hoveredCategorySlice = null"
+              >
+                <span class="legend-color-dot" :style="{ background: slice.color }"></span>
+                <span class="legend-name">{{ slice.name }}</span>
+                <span class="legend-val">{{ slice.cups }} ({{ slice.percentage }}%)</span>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -297,8 +386,48 @@
             </div>
             <CreditCard :size="16" class="text-muted" />
           </div>
-          <div class="chart-body doughnut-body">
-            <canvas ref="paymentChartCanvas"></canvas>
+          <div class="chart-body doughnut-container">
+            <div class="doughnut-svg-wrapper">
+              <svg viewBox="0 0 160 160" class="doughnut-svg">
+                <g transform="rotate(-90 80 80)">
+                  <circle
+                    v-for="slice in paymentChartData.slices"
+                    :key="slice.key"
+                    cx="80"
+                    cy="80"
+                    r="60"
+                    fill="none"
+                    :stroke="slice.color"
+                    stroke-width="22"
+                    :stroke-dasharray="slice.strokeDasharray"
+                    :stroke-dashoffset="slice.strokeDashoffset"
+                    class="doughnut-segment"
+                    :class="{ active: hoveredPaymentSlice?.key === slice.key }"
+                    @mouseenter="hoveredPaymentSlice = slice"
+                    @mouseleave="hoveredPaymentSlice = null"
+                  />
+                </g>
+              </svg>
+              <div class="doughnut-center-text">
+                <span class="center-value">{{ hoveredPaymentSlice ? hoveredPaymentSlice.count : paymentChartData.grandTotalCount }}</span>
+                <span class="center-label">{{ hoveredPaymentSlice ? hoveredPaymentSlice.name : t('dash.orders') }}</span>
+              </div>
+            </div>
+
+            <div class="chart-legend-list">
+              <div
+                v-for="slice in paymentChartData.slices"
+                :key="slice.key"
+                class="legend-item"
+                :class="{ active: hoveredPaymentSlice?.key === slice.key }"
+                @mouseenter="hoveredPaymentSlice = slice"
+                @mouseleave="hoveredPaymentSlice = null"
+              >
+                <span class="legend-color-dot" :style="{ background: slice.color }"></span>
+                <span class="legend-name">{{ slice.name }}</span>
+                <span class="legend-val font-mono">${{ slice.amount.toFixed(2) }} ({{ slice.percentage }}%)</span>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -311,8 +440,30 @@
             </div>
             <BarChart2 :size="16" class="text-muted" />
           </div>
-          <div class="chart-body">
-            <canvas ref="bestSellersChartCanvas"></canvas>
+          <div class="chart-body top-sellers-body">
+            <div
+              v-for="item in topSellersData"
+              :key="item.name"
+              class="top-seller-row"
+            >
+              <div class="rank-badge" :style="{ background: item.color }">
+                #{{ item.rank }}
+              </div>
+              <div class="seller-details">
+                <div class="seller-name-row">
+                  <span class="seller-name">{{ item.name }}</span>
+                  <span class="seller-stat font-mono">
+                    {{ item.cups }} {{ t('pos.cups') }} • ${{ item.revenue.toFixed(2) }}
+                  </span>
+                </div>
+                <div class="bar-track">
+                  <div
+                    class="bar-fill"
+                    :style="{ width: `${item.percent}%`, background: item.color }"
+                  ></div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -469,7 +620,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import {
   DollarSign,
   ShoppingBag,
@@ -487,13 +638,10 @@ import {
   PieChart,
   BarChart2,
 } from 'lucide-vue-next';
-import { Chart, registerables } from 'chart.js';
 import { posApi, DashboardMetrics } from '../services/api';
 import { useI18n } from '../i18n';
 import { useAuth } from '../composables/useAuth';
 import logoIcon from '../assets/logo-icon.jpg';
-
-Chart.register(...registerables);
 
 const { locale, t, translateCategory } = useI18n();
 const { isAdmin, isSeller } = useAuth();
@@ -503,24 +651,6 @@ const metrics = ref<DashboardMetrics | null>(null);
 const healthInfo = ref<any>(null);
 const loading = ref(false);
 const showShiftModal = ref(false);
-
-// Chart Canvas Refs & Chart Instances
-const salesChartCanvas = ref<HTMLCanvasElement | null>(null);
-const categoryChartCanvas = ref<HTMLCanvasElement | null>(null);
-const paymentChartCanvas = ref<HTMLCanvasElement | null>(null);
-const bestSellersChartCanvas = ref<HTMLCanvasElement | null>(null);
-
-let salesChartInstance: Chart | null = null;
-let categoryChartInstance: Chart | null = null;
-let paymentChartInstance: Chart | null = null;
-let bestSellersChartInstance: Chart | null = null;
-
-// Keep currentTab in sync with role
-watch(isAdmin, (admin) => {
-  if (!admin) {
-    currentTab.value = 'seller';
-  }
-});
 
 // Load Dashboard metrics from API
 const loadData = async () => {
@@ -532,8 +662,6 @@ const loadData = async () => {
     ]);
     metrics.value = metricsData;
     healthInfo.value = healthData;
-    await nextTick();
-    renderCharts();
   } catch (err) {
     console.error('Failed to load dashboard data', err);
   } finally {
@@ -628,283 +756,213 @@ const handlePrintShift = () => {
   window.print();
 };
 
-// ==================== INTERACTIVE CHARTS RENDERING ====================
-const destroyCharts = () => {
-  if (salesChartInstance) {
-    salesChartInstance.destroy();
-    salesChartInstance = null;
-  }
-  if (categoryChartInstance) {
-    categoryChartInstance.destroy();
-    categoryChartInstance = null;
-  }
-  if (paymentChartInstance) {
-    paymentChartInstance.destroy();
-    paymentChartInstance = null;
-  }
-  if (bestSellersChartInstance) {
-    bestSellersChartInstance.destroy();
-    bestSellersChartInstance = null;
-  }
-};
+// ==================== NATIVE INTERACTIVE SVG CHARTS COMPUTATIONS ====================
 
-const renderCharts = () => {
-  destroyCharts();
+// 1. Sales Trend Line Chart Data
+const trendHours = ['07:00', '08:00', '09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00', '19:00', '20:00'];
+const hoveredTrendPoint = ref<any>(null);
 
-  if (currentTab.value !== 'admin') return;
+const trendPoints = computed(() => {
+  const orders = metrics.value?.recentOrders || [];
+  const hourlyData: { [key: string]: { sales: number; count: number } } = {};
+  trendHours.forEach((h) => { hourlyData[h] = { sales: 0, count: 0 }; });
+
+  if (orders.length > 0) {
+    orders.forEach((o) => {
+      const d = new Date(o.createdAt || Date.now());
+      const hourStr = `${d.getHours().toString().padStart(2, '0')}:00`;
+      if (hourlyData[hourStr]) {
+        hourlyData[hourStr].sales += Number(o.total) || 0;
+        hourlyData[hourStr].count += 1;
+      }
+    });
+  }
+
+  const values = trendHours.map((h) => hourlyData[h].sales);
+  const maxSales = Math.max(...values, 50);
+
+  const width = 560;
+  const height = 180;
+  const paddingX = 40;
+  const paddingY = 25;
+  const chartW = width - paddingX * 2;
+  const chartH = height - paddingY * 2;
+
+  const points = trendHours.map((hour, i) => {
+    const x = paddingX + (i / (trendHours.length - 1)) * chartW;
+    const sales = hourlyData[hour].sales;
+    const y = height - paddingY - (sales / maxSales) * chartH;
+    return {
+      hour,
+      sales,
+      count: hourlyData[hour].count,
+      x,
+      y,
+    };
+  });
+
+  let pathD = '';
+  let areaD = '';
+  if (points.length > 0) {
+    pathD = `M ${points[0].x},${points[0].y}`;
+    for (let i = 0; i < points.length - 1; i++) {
+      const p0 = points[i];
+      const p1 = points[i + 1];
+      const cx = (p0.x + p1.x) / 2;
+      pathD += ` C ${cx},${p0.y} ${cx},${p1.y} ${p1.x},${p1.y}`;
+    }
+    const firstP = points[0];
+    const lastP = points[points.length - 1];
+    areaD = `${pathD} L ${lastP.x},${height - paddingY} L ${firstP.x},${height - paddingY} Z`;
+  }
+
+  return { points, pathD, areaD, maxSales };
+});
+
+// 2. Category Breakdown Doughnut Chart Data
+const categoryColors = ['#794022', '#591F0B', '#2D6A4F', '#D99937', '#DEAC76', '#8B5A2B'];
+const hoveredCategorySlice = ref<any>(null);
+
+const categoryChartData = computed(() => {
+  const orders = metrics.value?.recentOrders || [];
+  const catMap: { [key: string]: number } = {};
+
+  if (orders.length > 0) {
+    orders.forEach((o) => {
+      (o.items || []).forEach((item: any) => {
+        const catName = item.categoryName || item.category || 'Other';
+        const translated = translateCategory(catName);
+        catMap[translated] = (catMap[translated] || 0) + (Number(item.quantity) || 1);
+      });
+    });
+  } else {
+    catMap[translateCategory('Hot Coffee')] = 14;
+    catMap[translateCategory('Ice Coffee')] = 28;
+    catMap[translateCategory('Tea')] = 12;
+    catMap[translateCategory('Frappe')] = 8;
+  }
+
+  const totalCups = Object.values(catMap).reduce((a, b) => a + b, 0) || 1;
+  const radius = 60;
+  const circumference = 2 * Math.PI * radius;
+  let accumulatedOffset = 0;
+
+  const slices = Object.entries(catMap).map(([name, cups], index) => {
+    const percentage = (cups / totalCups) * 100;
+    const strokeDasharray = `${(percentage / 100) * circumference} ${circumference}`;
+    const strokeDashoffset = -accumulatedOffset;
+    accumulatedOffset += (percentage / 100) * circumference;
+
+    return {
+      name,
+      cups,
+      percentage: Math.round(percentage),
+      color: categoryColors[index % categoryColors.length],
+      strokeDasharray,
+      strokeDashoffset,
+    };
+  });
+
+  return { slices, totalCups };
+});
+
+// 3. Payment Method Share Doughnut Chart Data
+const hoveredPaymentSlice = ref<any>(null);
+
+const paymentChartData = computed(() => {
+  const cashCount = shiftCashOrdersCount.value;
+  const cardCount = shiftCardOrdersCount.value;
+  const qrCount = shiftQrOrdersCount.value;
 
   const orders = metrics.value?.recentOrders || [];
 
-  // 1. Sales & Revenue Performance Trend Chart
-  if (salesChartCanvas.value) {
-    const hourlyData: { [key: string]: number } = {};
-    const defaultHours = ['07:00', '08:00', '09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00', '19:00', '20:00'];
-    defaultHours.forEach((h) => { hourlyData[h] = 0; });
+  const methods = [
+    {
+      key: 'CASH',
+      name: locale.value === 'km' ? 'សាច់ប្រាក់ (Cash)' : 'Cash',
+      amount: shiftCashSales.value,
+      count: cashCount || (orders.length === 0 ? 18 : 0),
+      color: '#2D6A4F',
+    },
+    {
+      key: 'QR_CODE',
+      name: locale.value === 'km' ? 'វេរ QR (KHQR)' : 'KHQR',
+      amount: shiftQrSales.value,
+      count: qrCount || (orders.length === 0 ? 16 : 0),
+      color: '#7C3AED',
+    },
+    {
+      key: 'CARD',
+      name: locale.value === 'km' ? 'កាត (Card)' : 'Card',
+      amount: shiftCardSales.value,
+      count: cardCount || (orders.length === 0 ? 6 : 0),
+      color: '#2563EB',
+    },
+  ];
 
-    if (orders.length > 0) {
-      orders.forEach((o) => {
-        const d = new Date(o.createdAt || Date.now());
-        const hourStr = `${d.getHours().toString().padStart(2, '0')}:00`;
-        if (hourlyData[hourStr] !== undefined) {
-          hourlyData[hourStr] += Number(o.total) || 0;
-        } else {
-          hourlyData[hourStr] = Number(o.total) || 0;
-        }
-      });
-    }
+  const grandTotalCount = methods.reduce((sum, m) => sum + m.count, 0) || 1;
+  const radius = 60;
+  const circumference = 2 * Math.PI * radius;
+  let accumulatedOffset = 0;
 
-    const labels = Object.keys(hourlyData).sort();
-    const salesValues = labels.map((l) => Number(hourlyData[l].toFixed(2)));
+  const slices = methods.map((m) => {
+    const percentage = (m.count / grandTotalCount) * 100;
+    const strokeDasharray = `${(percentage / 100) * circumference} ${circumference}`;
+    const strokeDashoffset = -accumulatedOffset;
+    accumulatedOffset += (percentage / 100) * circumference;
 
-    const ctx = salesChartCanvas.value.getContext('2d');
-    if (ctx) {
-      const gradient = ctx.createLinearGradient(0, 0, 0, 240);
-      gradient.addColorStop(0, 'rgba(121, 64, 34, 0.35)');
-      gradient.addColorStop(1, 'rgba(121, 64, 34, 0.01)');
-
-      salesChartInstance = new Chart(ctx, {
-        type: 'line',
-        data: {
-          labels,
-          datasets: [
-            {
-              label: locale.value === 'km' ? 'ចំណូល ($)' : 'Revenue ($)',
-              data: salesValues,
-              borderColor: '#794022',
-              backgroundColor: gradient,
-              fill: true,
-              tension: 0.38,
-              borderWidth: 3,
-              pointBackgroundColor: '#591F0B',
-              pointBorderColor: '#FAF7F2',
-              pointBorderWidth: 2,
-              pointRadius: 4,
-              pointHoverRadius: 7,
-            },
-          ],
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            legend: { display: false },
-            tooltip: {
-              callbacks: {
-                label: (ctx) => ` ${ctx.dataset.label}: $${Number(ctx.raw).toFixed(2)}`,
-              },
-            },
-          },
-          scales: {
-            x: {
-              grid: { display: false },
-              ticks: { font: { family: 'Inter, system-ui, sans-serif', size: 11 } },
-            },
-            y: {
-              beginAtZero: true,
-              ticks: {
-                callback: (val) => `$${val}`,
-                font: { family: 'Inter, system-ui, sans-serif', size: 11 },
-              },
-              grid: { color: 'rgba(0,0,0,0.05)' },
-            },
-          },
-        },
-      });
-    }
-  }
-
-  // 2. Category Distribution Doughnut Chart
-  if (categoryChartCanvas.value) {
-    const catMap: { [key: string]: number } = {};
-    if (orders.length > 0) {
-      orders.forEach((o) => {
-        (o.items || []).forEach((item: any) => {
-          const catName = item.categoryName || item.category || 'Other';
-          const translated = translateCategory(catName);
-          catMap[translated] = (catMap[translated] || 0) + (Number(item.quantity) || 1);
-        });
-      });
-    } else {
-      catMap[translateCategory('Hot Coffee')] = 14;
-      catMap[translateCategory('Ice Coffee')] = 28;
-      catMap[translateCategory('Tea')] = 12;
-      catMap[translateCategory('Frappe')] = 8;
-    }
-
-    const catLabels = Object.keys(catMap);
-    const catData = Object.values(catMap);
-    const coffeeColors = ['#794022', '#591F0B', '#2D6A4F', '#D99937', '#DEAC76', '#8B5A2B'];
-
-    const ctx = categoryChartCanvas.value.getContext('2d');
-    if (ctx) {
-      categoryChartInstance = new Chart(ctx, {
-        type: 'doughnut',
-        data: {
-          labels: catLabels,
-          datasets: [
-            {
-              data: catData,
-              backgroundColor: coffeeColors.slice(0, catLabels.length),
-              borderWidth: 2,
-              borderColor: '#ffffff',
-            },
-          ],
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            legend: {
-              position: 'right',
-              labels: { font: { family: 'Inter, system-ui, sans-serif', size: 12 }, usePointStyle: true, boxWidth: 10 },
-            },
-          },
-          cutout: '68%',
-        },
-      });
-    }
-  }
-
-  // 3. Payment Method Share Doughnut Chart
-  if (paymentChartCanvas.value) {
-    const cashCount = shiftCashOrdersCount.value;
-    const cardCount = shiftCardOrdersCount.value;
-    const qrCount = shiftQrOrdersCount.value;
-
-    const payLabels = [
-      locale.value === 'km' ? 'សាច់ប្រាក់ (Cash)' : 'Cash',
-      locale.value === 'km' ? 'កាត (Card)' : 'Card',
-      locale.value === 'km' ? 'វេរ QR (KHQR)' : 'KHQR',
-    ];
-    const payData = [
-      cashCount || (orders.length === 0 ? 15 : 0),
-      cardCount || (orders.length === 0 ? 5 : 0),
-      qrCount || (orders.length === 0 ? 20 : 0),
-    ];
-
-    const ctx = paymentChartCanvas.value.getContext('2d');
-    if (ctx) {
-      paymentChartInstance = new Chart(ctx, {
-        type: 'doughnut',
-        data: {
-          labels: payLabels,
-          datasets: [
-            {
-              data: payData,
-              backgroundColor: ['#2D6A4F', '#2563EB', '#7C3AED'],
-              borderWidth: 2,
-              borderColor: '#ffffff',
-            },
-          ],
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            legend: {
-              position: 'right',
-              labels: { font: { family: 'Inter, system-ui, sans-serif', size: 12 }, usePointStyle: true, boxWidth: 10 },
-            },
-          },
-          cutout: '68%',
-        },
-      });
-    }
-  }
-
-  // 4. Top Selling Drinks Horizontal Bar Chart
-  if (bestSellersChartCanvas.value) {
-    const itemMap: { [key: string]: number } = {};
-    if (orders.length > 0) {
-      orders.forEach((o) => {
-        (o.items || []).forEach((item: any) => {
-          const name = item.productName || 'Drink';
-          itemMap[name] = (itemMap[name] || 0) + (Number(item.quantity) || 1);
-        });
-      });
-    } else {
-      itemMap['Iced Latte'] = 34;
-      itemMap['Iced Americano'] = 29;
-      itemMap['Hot Cappuccino'] = 22;
-      itemMap['Matcha Latte'] = 18;
-      itemMap['Caramel Macchiato'] = 15;
-    }
-
-    const sortedItems = Object.entries(itemMap)
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, 5);
-
-    const bestLabels = sortedItems.map((i) => i[0]);
-    const bestData = sortedItems.map((i) => i[1]);
-
-    const ctx = bestSellersChartCanvas.value.getContext('2d');
-    if (ctx) {
-      bestSellersChartInstance = new Chart(ctx, {
-        type: 'bar',
-        data: {
-          labels: bestLabels,
-          datasets: [
-            {
-              label: locale.value === 'km' ? 'ចំនួនកែវ (Cups)' : 'Cups Sold',
-              data: bestData,
-              backgroundColor: ['#794022', '#591F0B', '#2D6A4F', '#D99937', '#DEAC76'],
-              borderRadius: 6,
-              borderSkipped: false,
-            },
-          ],
-        },
-        options: {
-          indexAxis: 'y',
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            legend: { display: false },
-          },
-          scales: {
-            x: {
-              beginAtZero: true,
-              ticks: { precision: 0, font: { family: 'Inter, system-ui, sans-serif', size: 11 } },
-              grid: { color: 'rgba(0,0,0,0.05)' },
-            },
-            y: {
-              grid: { display: false },
-              ticks: { font: { family: 'Inter, system-ui, sans-serif', size: 12, weight: 'bold' } },
-            },
-          },
-        },
-      });
-    }
-  }
-};
-
-watch([currentTab, locale, metrics], () => {
-  nextTick(() => {
-    renderCharts();
+    return {
+      ...m,
+      percentage: Math.round(percentage),
+      strokeDasharray,
+      strokeDashoffset,
+    };
   });
+
+  return { slices, grandTotalCount };
 });
 
-onUnmounted(() => {
-  destroyCharts();
+// 4. Top Selling Drinks Chart Data
+const topSellersData = computed(() => {
+  const orders = metrics.value?.recentOrders || [];
+  const itemMap: { [key: string]: { cups: number; revenue: number } } = {};
+
+  if (orders.length > 0) {
+    orders.forEach((o) => {
+      (o.items || []).forEach((item: any) => {
+        const name = item.productName || 'Drink';
+        const qty = Number(item.quantity) || 1;
+        const price = Number(item.price) || 0;
+        if (!itemMap[name]) {
+          itemMap[name] = { cups: 0, revenue: 0 };
+        }
+        itemMap[name].cups += qty;
+        itemMap[name].revenue += qty * price;
+      });
+    });
+  } else {
+    itemMap['Iced Latte'] = { cups: 34, revenue: 85.0 };
+    itemMap['Iced Americano'] = { cups: 29, revenue: 58.0 };
+    itemMap['Hot Cappuccino'] = { cups: 22, revenue: 55.0 };
+    itemMap['Matcha Latte'] = { cups: 18, revenue: 54.0 };
+    itemMap['Caramel Macchiato'] = { cups: 15, revenue: 45.0 };
+  }
+
+  const sorted = Object.entries(itemMap)
+    .sort((a, b) => b[1].cups - a[1].cups)
+    .slice(0, 5);
+
+  const maxCups = sorted.length > 0 ? sorted[0][1].cups : 1;
+  const barColors = ['#794022', '#591F0B', '#2D6A4F', '#D99937', '#DEAC76'];
+
+  return sorted.map(([name, data], idx) => ({
+    rank: idx + 1,
+    name,
+    cups: data.cups,
+    revenue: data.revenue,
+    percent: Math.round((data.cups / maxCups) * 100),
+    color: barColors[idx % barColors.length],
+  }));
 });
 
 onMounted(() => {
@@ -1401,13 +1459,242 @@ onMounted(() => {
 
 .chart-body {
   position: relative;
-  height: 260px;
   width: 100%;
   margin-top: 0.75rem;
 }
 
-.doughnut-body {
-  height: 240px;
+/* Native SVG Charts Styles */
+.svg-chart-body {
+  position: relative;
+  height: 200px;
+  width: 100%;
+}
+
+.trend-svg {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.svg-point {
+  cursor: pointer;
+  transition: transform 0.2s ease, r 0.2s ease;
+}
+
+.svg-point:hover {
+  r: 7.5;
+}
+
+.svg-axis-label {
+  font-size: 10px;
+  fill: #64748b;
+  font-family: system-ui, sans-serif;
+  font-weight: 500;
+}
+
+.chart-tooltip {
+  position: absolute;
+  transform: translate(-50%, -100%);
+  background: #1e293b;
+  color: #ffffff;
+  padding: 0.45rem 0.75rem;
+  border-radius: 8px;
+  font-size: 0.75rem;
+  pointer-events: none;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.18);
+  z-index: 10;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.tooltip-title {
+  font-weight: 700;
+  color: #94a3b8;
+  font-size: 0.7rem;
+}
+
+.tooltip-value {
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: #38bdf8;
+  font-family: monospace;
+}
+
+.tooltip-sub {
+  font-size: 0.7rem;
+  color: #cbd5e1;
+}
+
+/* Doughnut Chart Layout */
+.doughnut-container {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  height: 200px;
+}
+
+.doughnut-svg-wrapper {
+  position: relative;
+  width: 140px;
+  height: 140px;
+  flex-shrink: 0;
+}
+
+.doughnut-svg {
+  width: 100%;
+  height: 100%;
+}
+
+.doughnut-segment {
+  cursor: pointer;
+  transition: stroke-width 0.25s ease, opacity 0.25s ease;
+}
+
+.doughnut-segment.active,
+.doughnut-segment:hover {
+  stroke-width: 26;
+  opacity: 0.95;
+}
+
+.doughnut-center-text {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  pointer-events: none;
+}
+
+.center-value {
+  font-size: 1.3rem;
+  font-weight: 800;
+  color: var(--gray-900);
+  line-height: 1.1;
+}
+
+.center-label {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--gray-500);
+  max-width: 80px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.chart-legend-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  flex: 1;
+  overflow-y: auto;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.78rem;
+  padding: 0.3rem 0.45rem;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.legend-item:hover,
+.legend-item.active {
+  background: var(--gray-100);
+}
+
+.legend-color-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.legend-name {
+  font-weight: 600;
+  color: var(--gray-700);
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.legend-val {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--gray-900);
+}
+
+/* Top Sellers Progress Bar List */
+.top-sellers-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  padding: 0.25rem 0;
+}
+
+.top-seller-row {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+}
+
+.rank-badge {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  color: #ffffff;
+  font-weight: 800;
+  font-size: 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.seller-details {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.seller-name-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.85rem;
+}
+
+.seller-name {
+  font-weight: 700;
+  color: var(--gray-800);
+}
+
+.seller-stat {
+  font-size: 0.78rem;
+  color: var(--gray-600);
+  font-weight: 600;
+}
+
+.bar-track {
+  width: 100%;
+  height: 9px;
+  background: var(--gray-200);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.bar-fill {
+  height: 100%;
+  border-radius: 6px;
+  transition: width 0.4s ease;
 }
 
 @media (max-width: 1024px) {
