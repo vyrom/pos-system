@@ -1,0 +1,68 @@
+services:
+  postgres_prod:
+    image: postgres:16-alpine
+    container_name: pos_postgres_prod
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-pos_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-pos_password_secret}
+      POSTGRES_DB: ${POSTGRES_DB_PROD:-pos_db_prod}
+    ports:
+      - "${POSTGRES_PROD_PORT:-5436}:5432"
+    volumes:
+      - postgres_prod_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-pos_user} -d ${POSTGRES_DB_PROD:-pos_db_prod}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - pos_prod_network
+
+  backend_prod:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      target: production
+    container_name: pos_backend_prod
+    restart: unless-stopped
+    ports:
+      - "${BACKEND_PROD_PORT:-3006}:3000"
+    environment:
+      PORT: 3000
+      NODE_ENV: production
+      POSTGRES_HOST: postgres_prod
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: ${POSTGRES_USER:-pos_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-pos_password_secret}
+      POSTGRES_DB: ${POSTGRES_DB_PROD:-pos_db_prod}
+      JWT_SECRET: ${JWT_SECRET_PROD:-super_secret_pos_jwt_key_prod_2026}
+    depends_on:
+      postgres_prod:
+        condition: service_healthy
+    networks:
+      pos_prod_network:
+        aliases:
+          - backend
+
+  frontend_prod:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      target: production
+    container_name: pos_frontend_prod
+    restart: unless-stopped
+    ports:
+      - "${FRONTEND_PROD_PORT:-8080}:80"
+    depends_on:
+      - backend_prod
+    networks:
+      - pos_prod_network
+
+volumes:
+  postgres_prod_data:
+    driver: local
+
+networks:
+  pos_prod_network:
+    driver: bridge

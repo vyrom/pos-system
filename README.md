@@ -67,20 +67,37 @@ To run in the background (detached mode):
 docker compose up -d --build
 ```
 
-### 3. Access Services
-- **Frontend UI (POS Terminal)**: [http://localhost:5173](http://localhost:5173)
-- **Backend API**: [http://localhost:3000/api](http://localhost:3000/api)
-- **Swagger API Docs**: [http://localhost:3000/api/docs](http://localhost:3000/api/docs)
-- **Health Check**: [http://localhost:3000/api/health](http://localhost:3000/api/health)
-- **PostgreSQL Database**: `localhost:5432` (User: `pos_user`, Database: `pos_db`)
+### 3. Access Services (Development)
+- **Frontend UI (POS Terminal)**: [http://localhost:5175](http://localhost:5175)
+- **Backend API**: [http://localhost:3005/api](http://localhost:3005/api)
+- **Swagger API Docs**: [http://localhost:3005/api/docs](http://localhost:3005/api/docs)
+- **PostgreSQL Database**: `localhost:5435`
 
-### 4. Stop containers
+### 4. Separate Production Environment (Nginx + Compiled Dist)
+To run a separate, fully optimized Production environment (using multi-stage Nginx static web server & compiled NestJS app):
+
 ```bash
-docker compose down
+# Start Production stack
+npm run prod:docker
+# Or directly with Docker Compose:
+docker compose -f docker-compose.prod.yml up -d --build
 ```
-To stop and remove database volumes:
+
+- **Production Frontend UI (Nginx Gzip)**: [http://localhost:8080](http://localhost:8080)
+- **Production Backend API**: [http://localhost:3006/api](http://localhost:3006/api)
+- **Production Swagger API Docs**: [http://localhost:3006/api/docs](http://localhost:3006/api/docs)
+- **Production PostgreSQL Database**: `localhost:5436`
+
+To stop the production environment:
 ```bash
-docker compose down -v
+npm run prod:down
+# Or: docker compose -f docker-compose.prod.yml down
+```
+
+### 5. Stop Development Containers
+```bash
+npm run dev:down
+# Or: docker compose -f docker-compose.yml down
 ```
 
 ---

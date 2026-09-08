@@ -1,0 +1,12 @@
+{
+  "name": "system-pos",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev:docker": "docker compose -f docker-compose.yml up -d --build",
+    "dev:down": "docker compose -f docker-compose.yml down",
+    "prod:docker": "docker compose -f docker-compose.prod.yml up -d --build",
+    "prod:down": "docker compose -f docker-compose.prod.yml down",
+    "prod:logs": "docker compose -f docker-compose.prod.yml logs -f"
+  }
+}
