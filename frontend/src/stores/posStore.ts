@@ -507,9 +507,8 @@ export const usePosStore = defineStore('pos', {
       this.isLoading = true;
       this.error = null;
       try {
-        const [categoriesData, productsData, ingCats, ingData] = await Promise.all([
+        const [categoriesData, ingCats, ingData] = await Promise.all([
           posApi.getCategories(),
-          posApi.getProducts(this.selectedCategory, this.searchQuery),
           posApi.getIngredientCategories(),
           posApi.getIngredients(this.selectedIngredientCategory, this.ingredientSearchQuery),
         ]);
@@ -518,7 +517,7 @@ export const usePosStore = defineStore('pos', {
           this.selectedCategory = 'All';
           try { localStorage.setItem('pos_selected_category', 'All'); } catch (e) {}
         }
-        this.products = productsData;
+        this.products = await posApi.getProducts(this.selectedCategory, this.searchQuery);
         this.syncCartWithProducts();
         this.ingredientCategories = ingCats;
         if (this.selectedIngredientCategory !== 'All' && !this.ingredientCategories.includes(this.selectedIngredientCategory)) {

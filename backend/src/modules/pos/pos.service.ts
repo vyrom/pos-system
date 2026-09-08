@@ -182,11 +182,34 @@ export class PosService {
     return minCups === Infinity ? 0 : minCups;
   }
 
+  private syncProductCategoriesWithState() {
+    const existingCatNames = new Set(this.categoriesState.map((c) => c.name.toLowerCase().trim()));
+    const productCategories = Array.from(
+      new Set(this.products.map((p) => p.category).filter((c) => c && c.trim() !== '')),
+    );
+
+    for (const pCat of productCategories) {
+      if (!existingCatNames.has(pCat.toLowerCase().trim())) {
+        const newCat: CategoryEntity = {
+          id: `cat-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
+          name: pCat.trim(),
+          nameKh: pCat.trim(),
+          icon: '☕',
+          isEnabled: true,
+          createdAt: new Date().toISOString(),
+        };
+        this.categoriesState.push(newCat);
+        existingCatNames.add(pCat.toLowerCase().trim());
+      }
+    }
+  }
+
   getProducts(category?: string, search?: string, includeDisabled = false): Product[] {
+    this.syncProductCategoriesWithState();
     const disabledCatNames = new Set(
       this.categoriesState
         .filter((c) => c.isEnabled === false)
-        .map((c) => c.name.toLowerCase()),
+        .map((c) => c.name.toLowerCase().trim()),
     );
 
     let result = this.products.map((p) => {
@@ -198,15 +221,22 @@ export class PosService {
     });
 
     if (!includeDisabled) {
-      result = result.filter((p) => !disabledCatNames.has(p.category.toLowerCase()));
+      result = result.filter((p) => {
+        const catName = (p.category || '').toLowerCase().trim();
+        return !disabledCatNames.has(catName);
+      });
     }
 
     if (category && category.toLowerCase() !== 'all') {
-      result = result.filter((p) => p.category.toLowerCase() === category.toLowerCase());
+      result = result.filter(
+        (p) => (p.category || '').toLowerCase().trim() === category.toLowerCase().trim(),
+      );
     }
     if (search && search.trim() !== '') {
       const q = search.toLowerCase().trim();
-      result = result.filter((p) => p.name.toLowerCase().includes(q) || (p.sku && p.sku.toLowerCase().includes(q)));
+      result = result.filter(
+        (p) => p.name.toLowerCase().includes(q) || (p.sku && p.sku.toLowerCase().includes(q)),
+      );
     }
     return result;
   }
@@ -223,31 +253,19 @@ export class PosService {
   }
 
   getCategories(): string[] {
-    const disabledCatNames = new Set(
-      this.categoriesState
-        .filter((c) => c.isEnabled === false)
-        .map((c) => c.name.toLowerCase()),
-    );
+    this.syncProductCategoriesWithState();
     const enabledCatNames = this.categoriesState
       .filter((c) => c.isEnabled !== false)
       .map((c) => c.name);
 
-    const productCategories = Array.from(new Set(this.products.map((p) => p.category)));
-    for (const pCat of productCategories) {
-      if (
-        !disabledCatNames.has(pCat.toLowerCase()) &&
-        !enabledCatNames.some((c) => c.toLowerCase() === pCat.toLowerCase())
-      ) {
-        enabledCatNames.push(pCat);
-      }
-    }
     return ['All', ...enabledCatNames];
   }
 
   getCategoriesDetails(): CategoryEntity[] {
+    this.syncProductCategoriesWithState();
     return this.categoriesState.map((cat) => {
       const itemCount = this.products.filter(
-        (p) => p.category.toLowerCase() === cat.name.toLowerCase(),
+        (p) => (p.category || '').toLowerCase().trim() === cat.name.toLowerCase().trim(),
       ).length;
       return {
         ...cat,
