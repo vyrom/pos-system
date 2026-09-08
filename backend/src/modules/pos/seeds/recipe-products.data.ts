@@ -3,57 +3,57 @@ import { Product } from '../entities/product.entity';
 
 export const INITIAL_INGREDIENTS_SEED: Ingredient[] = [
   // --- Coffee Beans ---
-  { id: 'ing-1', name: 'Coffee Sayon', category: 'Coffee Beans', stock: 0, uom: 'g', costPerUnit: 0.012, minStock: 500, icon: '☕' },
-  { id: 'ing-2', name: 'Sakor Bean', category: 'Coffee Beans', stock: 0, uom: 'g', costPerUnit: 0.0178, minStock: 500, icon: '☕' },
+  { id: 'ing-1', name: 'Coffee Sayon', category: 'Coffee Beans', stock: 4000, uom: 'g', costPerUnit: 0.012, minStock: 500, icon: '☕' }, // Sayon 500g (8 packs = 4,000g @ $6.00/pack)
+  { id: 'ing-2', name: 'Sakor Bean', category: 'Coffee Beans', stock: 5000, uom: 'g', costPerUnit: 0.0178, minStock: 500, icon: '☕' },
 
   // --- Dairy & Milk ---
-  { id: 'ing-3', name: 'Fresh Milk', category: 'Dairy & Milk', stock: 0, uom: 'ml', costPerUnit: 0.0021, minStock: 2000, icon: '🥛' },
-  { id: 'ing-4', name: 'Sweeten Milk', category: 'Dairy & Milk', stock: 0, uom: 'ml', costPerUnit: 0.0029, minStock: 500, icon: '🥛' },
-  { id: 'ing-5', name: 'Kofi Evaporated milk', category: 'Dairy & Milk', stock: 0, uom: 'ml', costPerUnit: 0.00222, minStock: 500, icon: '🥛' },
-  { id: 'ing-6', name: 'Whipping Cream', category: 'Dairy & Milk', stock: 0, uom: 'g', costPerUnit: 0.00696, minStock: 300, icon: '🍦' },
-  { id: 'ing-7', name: 'Vanilla Ice-Cream', category: 'Dairy & Milk', stock: 0, uom: 'scoop', costPerUnit: 0.41, minStock: 10, icon: '🍨' },
-  { id: 'ing-8', name: 'Kofi Non Dairy creamer', category: 'Dairy & Milk', stock: 0, uom: 'g', costPerUnit: 0.0058, minStock: 400, icon: '🥣' },
+  { id: 'ing-3', name: 'Fresh Milk', category: 'Dairy & Milk', stock: 4000, uom: 'ml', costPerUnit: 0.0019, minStock: 2000, icon: '🥛' }, // Full Cream Milk 1L (4 cartons = 4,000ml @ $1.90/L)
+  { id: 'ing-4', name: 'Sweeten Milk', category: 'Dairy & Milk', stock: 8000, uom: 'ml', costPerUnit: 0.00195, minStock: 500, icon: '🥛' }, // Kofi-Condensed Milk 2kg (4 packs = 8,000g @ $3.90/2kg)
+  { id: 'ing-5', name: 'Kofi Evaporated milk', category: 'Dairy & Milk', stock: 3600, uom: 'ml', costPerUnit: 0.00222, minStock: 500, icon: '🥛' }, // Evaporated Milk 900ml (4 bottles = 3,600ml @ $2.00/900ml)
+  { id: 'ing-6', name: 'Whipping Cream', category: 'Dairy & Milk', stock: 2000, uom: 'g', costPerUnit: 0.00696, minStock: 300, icon: '🍦' },
+  { id: 'ing-7', name: 'Vanilla Ice-Cream', category: 'Dairy & Milk', stock: 50, uom: 'scoop', costPerUnit: 0.41, minStock: 10, icon: '🍨' },
+  { id: 'ing-8', name: 'Kofi Non Dairy creamer', category: 'Dairy & Milk', stock: 3000, uom: 'g', costPerUnit: 0.0058, minStock: 400, icon: '🥣' },
 
   // --- Syrups & Sauces ---
-  { id: 'ing-9', name: 'Kofi Sugar Syrup', category: 'Syrups & Sauces', stock: 0, uom: 'ml', costPerUnit: 0.00233, minStock: 1000, icon: '🍯' },
-  { id: 'ing-10', name: 'Monin Caramel Syrup', category: 'Syrups & Sauces', stock: 0, uom: 'ml', costPerUnit: 0.015, minStock: 300, icon: '🍯' },
-  { id: 'ing-11', name: 'Monin Caramel Sauce', category: 'Syrups & Sauces', stock: 0, uom: 'ml', costPerUnit: 0.0137, minStock: 200, icon: '🍮' },
-  { id: 'ing-12', name: 'Monin Raspberry Syrup', category: 'Syrups & Sauces', stock: 0, uom: 'ml', costPerUnit: 0.015, minStock: 200, icon: '💖' },
-  { id: 'ing-13', name: 'Monin Toffee nut syrup', category: 'Syrups & Sauces', stock: 0, uom: 'ml', costPerUnit: 0.015, minStock: 200, icon: '🌰' },
-  { id: 'ing-14', name: 'Monin Dark Chocolate Sauce', category: 'Syrups & Sauces', stock: 0, uom: 'ml', costPerUnit: 0.01053, minStock: 200, icon: '🍫' },
-  { id: 'ing-15', name: 'Monin Chai Tea Syrup', category: 'Syrups & Sauces', stock: 0, uom: 'g', costPerUnit: 0.015, minStock: 200, icon: '🍵' },
-  { id: 'ing-16', name: 'Monin Green Tea syrup', category: 'Syrups & Sauces', stock: 0, uom: 'ml', costPerUnit: 0.015, minStock: 200, icon: '🍵' },
-  { id: 'ing-17', name: 'Monin Kiwi Syrup', category: 'Syrups & Sauces', stock: 0, uom: 'ml', costPerUnit: 0.015, minStock: 200, icon: '🥝' },
-  { id: 'ing-18', name: 'Monin Passion Syrup', category: 'Syrups & Sauces', stock: 0, uom: 'ml', costPerUnit: 0.015, minStock: 200, icon: '🥭' },
-  { id: 'ing-19', name: 'Monin Blue Curacao', category: 'Syrups & Sauces', stock: 0, uom: 'ml', costPerUnit: 0.015, minStock: 200, icon: '🌊' },
-  { id: 'ing-20', name: 'Monin Strawberry Syrup', category: 'Syrups & Sauces', stock: 0, uom: 'ml', costPerUnit: 0.015, minStock: 200, icon: '🍓' },
+  { id: 'ing-9', name: 'Kofi Sugar Syrup', category: 'Syrups & Sauces', stock: 10000, uom: 'ml', costPerUnit: 0.00233, minStock: 1000, icon: '🍯' },
+  { id: 'ing-10', name: 'Monin Caramel Syrup', category: 'Syrups & Sauces', stock: 3000, uom: 'ml', costPerUnit: 0.015, minStock: 300, icon: '🍯' },
+  { id: 'ing-11', name: 'Monin Caramel Sauce', category: 'Syrups & Sauces', stock: 2000, uom: 'ml', costPerUnit: 0.0137, minStock: 200, icon: '🍮' },
+  { id: 'ing-12', name: 'Monin Raspberry Syrup', category: 'Syrups & Sauces', stock: 2000, uom: 'ml', costPerUnit: 0.015, minStock: 200, icon: '💖' },
+  { id: 'ing-13', name: 'Monin Toffee nut syrup', category: 'Syrups & Sauces', stock: 2000, uom: 'ml', costPerUnit: 0.015, minStock: 200, icon: '🌰' },
+  { id: 'ing-14', name: 'Monin Dark Chocolate Sauce', category: 'Syrups & Sauces', stock: 2000, uom: 'ml', costPerUnit: 0.01053, minStock: 200, icon: '🍫' },
+  { id: 'ing-15', name: 'Monin Chai Tea Syrup', category: 'Syrups & Sauces', stock: 2000, uom: 'g', costPerUnit: 0.015, minStock: 200, icon: '🍵' },
+  { id: 'ing-16', name: 'Monin Green Tea syrup', category: 'Syrups & Sauces', stock: 2000, uom: 'ml', costPerUnit: 0.015, minStock: 200, icon: '🍵' },
+  { id: 'ing-17', name: 'Monin Kiwi Syrup', category: 'Syrups & Sauces', stock: 2000, uom: 'ml', costPerUnit: 0.015, minStock: 200, icon: '🥝' },
+  { id: 'ing-18', name: 'Monin Passion Syrup', category: 'Syrups & Sauces', stock: 2000, uom: 'ml', costPerUnit: 0.015, minStock: 200, icon: '🥭' },
+  { id: 'ing-19', name: 'Monin Blue Curacao', category: 'Syrups & Sauces', stock: 2000, uom: 'ml', costPerUnit: 0.015, minStock: 200, icon: '🌊' },
+  { id: 'ing-20', name: 'Monin Strawberry Syrup', category: 'Syrups & Sauces', stock: 2000, uom: 'ml', costPerUnit: 0.015, minStock: 200, icon: '🍓' },
 
   // --- Fruit Purees ---
-  { id: 'ing-21', name: 'Monin Strawberry Puree', category: 'Fruit Purees', stock: 0, uom: 'ml', costPerUnit: 0.0199, minStock: 300, icon: '🍓' },
-  { id: 'ing-22', name: 'Monin Blueberry Puree', category: 'Fruit Purees', stock: 0, uom: 'ml', costPerUnit: 0.0199, minStock: 300, icon: '🫐' },
-  { id: 'ing-23', name: 'Monin Passion Puree', category: 'Fruit Purees', stock: 0, uom: 'ml', costPerUnit: 0.0199, minStock: 300, icon: '🥭' },
+  { id: 'ing-21', name: 'Monin Strawberry Puree', category: 'Fruit Purees', stock: 3000, uom: 'ml', costPerUnit: 0.0199, minStock: 300, icon: '🍓' },
+  { id: 'ing-22', name: 'Monin Blueberry Puree', category: 'Fruit Purees', stock: 3000, uom: 'ml', costPerUnit: 0.0199, minStock: 300, icon: '🫐' },
+  { id: 'ing-23', name: 'Monin Passion Puree', category: 'Fruit Purees', stock: 3000, uom: 'ml', costPerUnit: 0.0199, minStock: 300, icon: '🥭' },
 
   // --- Powders & Tea ---
-  { id: 'ing-24', name: 'Chocolate Powder', category: 'Powders & Tea', stock: 0, uom: 'g', costPerUnit: 0.0168, minStock: 300, icon: '🍫' },
-  { id: 'ing-25', name: 'Kofi Chocolate Powder', category: 'Powders & Tea', stock: 0, uom: 'g', costPerUnit: 0.013, minStock: 300, icon: '🍫' },
-  { id: 'ing-26', name: 'Kofi Matcha Powder', category: 'Powders & Tea', stock: 0, uom: 'g', costPerUnit: 0.069, minStock: 200, icon: '🍵' },
-  { id: 'ing-27', name: 'Green tea Powder', category: 'Powders & Tea', stock: 0, uom: 'g', costPerUnit: 0.0745, minStock: 200, icon: '🍵' },
-  { id: 'ing-28', name: 'Monin Smoothie base', category: 'Powders & Tea', stock: 0, uom: 'g', costPerUnit: 0.0159, minStock: 300, icon: '🥤' },
-  { id: 'ing-29', name: 'Monin Coffee Powder', category: 'Powders & Tea', stock: 0, uom: 'g', costPerUnit: 0.0219, minStock: 200, icon: '☕' },
-  { id: 'ing-30', name: 'Monin Vanilla Powder', category: 'Powders & Tea', stock: 0, uom: 'g', costPerUnit: 0.0185, minStock: 200, icon: '🍨' },
+  { id: 'ing-24', name: 'Chocolate Powder', category: 'Powders & Tea', stock: 2000, uom: 'g', costPerUnit: 0.0218, minStock: 300, icon: '🍫' }, // Cocoa Powder 500g (4 packs = 2,000g @ $10.90/pack)
+  { id: 'ing-25', name: 'Kofi Chocolate Powder', category: 'Powders & Tea', stock: 2000, uom: 'g', costPerUnit: 0.0218, minStock: 300, icon: '🍫' },
+  { id: 'ing-26', name: 'Kofi Matcha Powder', category: 'Powders & Tea', stock: 400, uom: 'g', costPerUnit: 0.079, minStock: 200, icon: '🍵' }, // Premium Matcha Green Tea 100g (4 packs = 400g @ $7.90/pack)
+  { id: 'ing-27', name: 'Green tea Powder', category: 'Powders & Tea', stock: 400, uom: 'g', costPerUnit: 0.079, minStock: 200, icon: '🍵' },
+  { id: 'ing-28', name: 'Monin Smoothie base', category: 'Powders & Tea', stock: 3000, uom: 'g', costPerUnit: 0.0159, minStock: 300, icon: '🥤' },
+  { id: 'ing-29', name: 'Monin Coffee Powder', category: 'Powders & Tea', stock: 2000, uom: 'g', costPerUnit: 0.0219, minStock: 200, icon: '☕' },
+  { id: 'ing-30', name: 'Monin Vanilla Powder', category: 'Powders & Tea', stock: 2000, uom: 'g', costPerUnit: 0.0185, minStock: 200, icon: '🍨' },
 
   // --- Fresh & Others ---
-  { id: 'ing-31', name: 'Lime Slice', category: 'Fresh & Others', stock: 0, uom: 'slice', costPerUnit: 0.01, minStock: 20, icon: '🍋' },
-  { id: 'ing-32', name: 'Lime Juice', category: 'Fresh & Others', stock: 0, uom: 'ml', costPerUnit: 0.00225, minStock: 200, icon: '🍋' },
-  { id: 'ing-33', name: 'Fresh Passion Fruit', category: 'Fresh & Others', stock: 0, uom: 'pc', costPerUnit: 0.048, minStock: 20, icon: '🥭' },
-  { id: 'ing-34', name: 'Soda', category: 'Fresh & Others', stock: 0, uom: 'ml', costPerUnit: 0.00069, minStock: 1000, icon: '🫧' },
-  { id: 'ing-35', name: 'Ice', category: 'Fresh & Others', stock: 0, uom: 'oz', costPerUnit: 0.00125, minStock: 500, icon: '🧊' },
+  { id: 'ing-31', name: 'Lime Slice', category: 'Fresh & Others', stock: 100, uom: 'slice', costPerUnit: 0.01, minStock: 20, icon: '🍋' },
+  { id: 'ing-32', name: 'Lime Juice', category: 'Fresh & Others', stock: 2000, uom: 'ml', costPerUnit: 0.00225, minStock: 200, icon: '🍋' },
+  { id: 'ing-33', name: 'Fresh Passion Fruit', category: 'Fresh & Others', stock: 100, uom: 'pc', costPerUnit: 0.048, minStock: 20, icon: '🥭' },
+  { id: 'ing-34', name: 'Soda', category: 'Fresh & Others', stock: 10000, uom: 'ml', costPerUnit: 0.00069, minStock: 1000, icon: '🫧' },
+  { id: 'ing-35', name: 'Ice', category: 'Fresh & Others', stock: 5000, uom: 'oz', costPerUnit: 0.00125, minStock: 500, icon: '🧊' },
 
   // --- Packaging & Cups ---
-  { id: 'ing-36', name: '8oz Hot Cup & Lid', category: 'Packaging', stock: 0, uom: 'pc', costPerUnit: 0.10, minStock: 50, icon: '☕' },
-  { id: 'ing-37', name: '12oz Hot Cup, Lid & Sleeve', category: 'Packaging', stock: 0, uom: 'pc', costPerUnit: 0.18, minStock: 100, icon: '☕' },
-  { id: 'ing-38', name: '16oz Cold PET Cup, Lid & Straw', category: 'Packaging', stock: 0, uom: 'pc', costPerUnit: 0.22, minStock: 150, icon: '🥤' },
-  { id: 'ing-39', name: '16oz Smoothie/Frappe Cup & Dome Lid', category: 'Packaging', stock: 0, uom: 'pc', costPerUnit: 0.25, minStock: 100, icon: '🧋' },
+  { id: 'ing-36', name: '8oz Hot Cup & Lid', category: 'Packaging', stock: 500, uom: 'pc', costPerUnit: 0.10, minStock: 50, icon: '☕' },
+  { id: 'ing-37', name: '12oz Hot Cup, Lid & Sleeve', category: 'Packaging', stock: 800, uom: 'pc', costPerUnit: 0.18, minStock: 100, icon: '☕' },
+  { id: 'ing-38', name: '16oz Cold PET Cup, Lid & Straw', category: 'Packaging', stock: 1200, uom: 'pc', costPerUnit: 0.22, minStock: 150, icon: '🥤' },
+  { id: 'ing-39', name: '16oz Smoothie/Frappe Cup & Dome Lid', category: 'Packaging', stock: 800, uom: 'pc', costPerUnit: 0.25, minStock: 100, icon: '🧋' },
 ];
 
 export const RECIPE_PRODUCTS_SEED: Product[] = [
