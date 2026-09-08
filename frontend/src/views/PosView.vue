@@ -239,9 +239,12 @@
             <span class="font-mono font-bold">-${{ posStore.manualDiscountAmount.toFixed(2) }}</span>
           </div>
 
-          <div class="calc-row">
-            <span>{{ t('pos.tax') }}</span>
-            <span>${{ posStore.taxAmount.toFixed(2) }}</span>
+          <div class="calc-row tax-calc-row">
+            <span class="vat-tax-trigger" @click="openVatModal" title="Configure VAT Tax Settings">
+              {{ t('pos.tax') }} ({{ posStore.vatEnabled ? posStore.vatPercentage + '%' : t('vat.disabledBadge') }})
+              <Settings2 :size="13" class="tax-settings-icon" />
+            </span>
+            <span class="font-mono">${{ posStore.taxAmount.toFixed(2) }}</span>
           </div>
           <div class="calc-row total-row">
             <span>{{ t('pos.total') }}</span>
@@ -701,6 +704,102 @@
         </div>
       </div>
     </div>
+
+    <!-- VAT Settings Modal -->
+    <div v-if="showVatModal" class="modal-backdrop" @click.self="closeVatModal">
+      <div class="customizer-modal vat-modal-card">
+        <div class="modal-header">
+          <div class="modal-header-info">
+            <Settings2 :size="22" class="text-coffee" />
+            <h2 class="modal-product-title">{{ t('vat.title') }}</h2>
+          </div>
+          <button class="modal-close-btn" @click="closeVatModal" type="button">
+            <X :size="20" />
+          </button>
+        </div>
+
+        <div class="customizer-body vat-modal-body">
+          <!-- Enable / Disable VAT Switch Box -->
+          <div class="vat-toggle-box">
+            <div class="toggle-meta">
+              <span class="toggle-title">{{ t('vat.enableLabel') }}</span>
+              <span class="toggle-sub">{{ t('vat.enableSub') }}</span>
+            </div>
+            <button
+              class="vat-toggle-btn"
+              :class="{ active: tempVatEnabled }"
+              @click="tempVatEnabled = !tempVatEnabled"
+              type="button"
+            >
+              <span class="toggle-thumb"></span>
+            </button>
+          </div>
+
+          <!-- VAT Rate Selection & Custom Input -->
+          <div class="vat-rate-section" :class="{ disabled: !tempVatEnabled }">
+            <label class="section-title">{{ t('vat.rateLabel') }}</label>
+
+            <div class="vat-preset-chips">
+              <button
+                v-for="rate in vatPresets"
+                :key="rate"
+                type="button"
+                class="vat-chip"
+                :class="{ active: tempVatEnabled && tempVatPercentage === rate }"
+                @click="tempVatPercentage = rate; tempVatEnabled = true"
+              >
+                {{ rate }}%
+              </button>
+            </div>
+
+            <!-- Custom Input Field -->
+            <div class="custom-rate-wrap">
+              <label class="custom-rate-label">{{ t('vat.customInput') }}</label>
+              <div class="rate-input-box">
+                <input
+                  type="number"
+                  v-model.number="tempVatPercentage"
+                  min="0"
+                  max="100"
+                  step="0.5"
+                  class="rate-input"
+                  :disabled="!tempVatEnabled"
+                />
+                <span class="pct-symbol">%</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Realtime Cart Tax Preview -->
+          <div class="vat-preview-box">
+            <div class="preview-row">
+              <span>Taxable Subtotal:</span>
+              <span class="font-mono font-bold">${{ Math.max(0, posStore.subtotal - posStore.discountAmount).toFixed(2) }}</span>
+            </div>
+            <div class="preview-row">
+              <span>VAT Status / Rate:</span>
+              <span class="font-mono font-bold" :class="tempVatEnabled ? 'text-accent' : 'text-muted'">
+                {{ tempVatEnabled ? `${tempVatPercentage}% Rate` : t('vat.disabledBadge') }}
+              </span>
+            </div>
+            <div class="preview-row total">
+              <span>Calculated Tax:</span>
+              <span class="font-mono font-bold text-accent">
+                ${{ (tempVatEnabled ? Math.max(0, posStore.subtotal - posStore.discountAmount) * (tempVatPercentage / 100) : 0).toFixed(2) }}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-footer-actions">
+          <button type="button" class="btn btn-secondary cancel-btn" @click="closeVatModal">Cancel</button>
+          <button type="button" class="btn btn-primary submit-btn" @click="saveVatSettings">
+            <Check :size="16" />
+            <span>Save Settings</span>
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -751,6 +850,27 @@ const receiptOrder = ref<any>(null);
 const showPromoManagerModal = ref(false);
 const checkoutErrorMessage = ref<string | null>(null);
 const showCheckoutErrorModal = ref(false);
+
+// VAT Settings Modal State
+const showVatModal = ref(false);
+const tempVatEnabled = ref(true);
+const tempVatPercentage = ref(8);
+const vatPresets = [0, 5, 7, 8, 10, 15, 20];
+
+const openVatModal = () => {
+  tempVatEnabled.value = posStore.vatEnabled;
+  tempVatPercentage.value = posStore.vatPercentage;
+  showVatModal.value = true;
+};
+
+const closeVatModal = () => {
+  showVatModal.value = false;
+};
+
+const saveVatSettings = () => {
+  posStore.setVatSettings(tempVatEnabled.value, tempVatPercentage.value);
+  closeVatModal();
+};
 
 const activePromotions = computed(() => posStore.validPromotions);
 

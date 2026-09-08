@@ -222,6 +222,28 @@ function getStoredSelectedPromo(): string | null {
   }
 }
 
+function getStoredVatEnabled(): boolean {
+  if (typeof localStorage === 'undefined') return true;
+  try {
+    const item = localStorage.getItem('pos_vat_enabled');
+    return item !== 'false';
+  } catch (e) {
+    return true;
+  }
+}
+
+function getStoredVatPercentage(): number {
+  if (typeof localStorage === 'undefined') return 8;
+  try {
+    const item = localStorage.getItem('pos_vat_percentage');
+    if (item !== null) {
+      const val = parseFloat(item);
+      if (!isNaN(val) && val >= 0 && val <= 100) return val;
+    }
+  } catch (e) {}
+  return 8;
+}
+
 export const usePosStore = defineStore('pos', {
   state: () => ({
     products: [] as Product[],
@@ -235,12 +257,14 @@ export const usePosStore = defineStore('pos', {
     selectedIngredientCategory: (typeof localStorage !== 'undefined' ? localStorage.getItem('pos_selected_ingredient_category') : null) || 'All',
     ingredientSearchQuery: '',
 
-    // Cart & Promotions
+    // Cart & Promotions & VAT Settings
     cart: getStoredCart(),
     discountPercentage: getStoredDiscount(),
     promotions: getStoredPromotions(),
     selectedPromotionId: getStoredSelectedPromo(),
-    taxRate: 0.08, // 8% tax
+    vatEnabled: getStoredVatEnabled(),
+    vatPercentage: getStoredVatPercentage(),
+    taxRate: 0.08, // Deprecated fallback
     isLoading: false,
     isSubmitting: false,
     error: null as string | null,
@@ -453,8 +477,9 @@ export const usePosStore = defineStore('pos', {
     },
 
     taxAmount(): number {
+      if (!this.vatEnabled) return 0;
       const taxable = Math.max(0, this.subtotal - this.discountAmount);
-      return parseFloat((taxable * this.taxRate).toFixed(2));
+      return parseFloat((taxable * (this.vatPercentage / 100)).toFixed(2));
     },
 
     total(): number {
@@ -1053,6 +1078,16 @@ export const usePosStore = defineStore('pos', {
         throw new Error(message);
       } finally {
         this.isSubmitting = false;
+      }
+    },
+
+    setVatSettings(enabled: boolean, percentage: number) {
+      this.vatEnabled = enabled;
+      const parsedPct = Math.max(0, Math.min(100, Number(percentage) || 0));
+      this.vatPercentage = parsedPct;
+      if (typeof localStorage !== 'undefined') {
+        localStorage.setItem('pos_vat_enabled', enabled ? 'true' : 'false');
+        localStorage.setItem('pos_vat_percentage', parsedPct.toString());
       }
     },
   },
