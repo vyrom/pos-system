@@ -474,6 +474,14 @@ export const translations = {
     'dash.database': 'Database',
     'dash.environment': 'Environment',
     'dash.swaggerDocs': 'Swagger Docs',
+    'dash.salesChartTitle': 'Sales & Revenue Performance',
+    'dash.salesChartSub': 'Hourly transaction & revenue breakdown',
+    'dash.catChartTitle': 'Sales by Drink Category',
+    'dash.catChartSub': 'Distribution of cups & revenue across categories',
+    'dash.payChartTitle': 'Payment Method Share',
+    'dash.payChartSub': 'Breakdown of Cash, KHQR, and Card',
+    'dash.bestChartTitle': 'Top Selling Drinks',
+    'dash.bestChartSub': 'Best sellers ordered today',
   },
 
   km: {
@@ -941,6 +949,14 @@ export const translations = {
     'dash.database': 'មូលដ្ឋានទិន្នន័យ',
     'dash.environment': 'បរិស្ថានដំណើរការ',
     'dash.swaggerDocs': 'ឯកសារ API Swagger',
+    'dash.salesChartTitle': 'ក្រាហ្វិកចំណូល និងការលក់',
+    'dash.salesChartSub': 'ការបែងចែកការលក់តាមម៉ោង និងចំណូលសរុប',
+    'dash.catChartTitle': 'ការលក់តាមប្រភេទភេសជ្ជៈ',
+    'dash.catChartSub': 'ភាគរយនៃការលក់តាមប្រភេទកាហ្វេ និងភេសជ្ជៈ',
+    'dash.payChartTitle': 'ការបែងចែកវិធីសាស្ត្រទូទាត់',
+    'dash.payChartSub': 'ភាគរយសាច់ប្រាក់ វេរតាម QR និងកាត',
+    'dash.bestChartTitle': 'ភេសជ្ជៈលក់ដាច់បំផុត',
+    'dash.bestChartSub': 'មុខទំនិញដែលលក់ដាច់ខ្លាំងជាងគេប្រចាំថ្ងៃ',
   },
 };
 

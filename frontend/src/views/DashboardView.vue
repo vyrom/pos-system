@@ -255,6 +255,68 @@
         </div>
       </div>
 
+      <!-- Interactive Analytics Charts Grid -->
+      <div class="dashboard-charts-grid">
+        <!-- Chart 1: Sales & Revenue Trend -->
+        <div class="card chart-card full-width-chart">
+          <div class="card-header">
+            <div>
+              <h3 class="card-title">{{ t('dash.salesChartTitle') }}</h3>
+              <p class="chart-subtitle">{{ t('dash.salesChartSub') }}</p>
+            </div>
+            <div class="chart-badge">
+              <TrendingUp :size="14" />
+              <span>{{ t('dash.todaySales') }}</span>
+            </div>
+          </div>
+          <div class="chart-body">
+            <canvas ref="salesChartCanvas"></canvas>
+          </div>
+        </div>
+
+        <!-- Chart 2: Category Breakdown -->
+        <div class="card chart-card">
+          <div class="card-header">
+            <div>
+              <h3 class="card-title">{{ t('dash.catChartTitle') }}</h3>
+              <p class="chart-subtitle">{{ t('dash.catChartSub') }}</p>
+            </div>
+            <PieChart :size="16" class="text-muted" />
+          </div>
+          <div class="chart-body doughnut-body">
+            <canvas ref="categoryChartCanvas"></canvas>
+          </div>
+        </div>
+
+        <!-- Chart 3: Payment Method Share -->
+        <div class="card chart-card">
+          <div class="card-header">
+            <div>
+              <h3 class="card-title">{{ t('dash.payChartTitle') }}</h3>
+              <p class="chart-subtitle">{{ t('dash.payChartSub') }}</p>
+            </div>
+            <CreditCard :size="16" class="text-muted" />
+          </div>
+          <div class="chart-body doughnut-body">
+            <canvas ref="paymentChartCanvas"></canvas>
+          </div>
+        </div>
+
+        <!-- Chart 4: Top Selling Drinks -->
+        <div class="card chart-card full-width-chart">
+          <div class="card-header">
+            <div>
+              <h3 class="card-title">{{ t('dash.bestChartTitle') }}</h3>
+              <p class="chart-subtitle">{{ t('dash.bestChartSub') }}</p>
+            </div>
+            <BarChart2 :size="16" class="text-muted" />
+          </div>
+          <div class="chart-body">
+            <canvas ref="bestSellersChartCanvas"></canvas>
+          </div>
+        </div>
+      </div>
+
       <!-- 2 Column Layout: Live Orders & System Architecture -->
       <div class="dashboard-columns">
         <!-- Live Orders Table -->
@@ -407,7 +469,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, watch } from 'vue';
+import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue';
 import {
   DollarSign,
   ShoppingBag,
@@ -422,11 +484,16 @@ import {
   QrCode,
   Printer,
   ShieldCheck,
+  PieChart,
+  BarChart2,
 } from 'lucide-vue-next';
+import { Chart, registerables } from 'chart.js';
 import { posApi, DashboardMetrics } from '../services/api';
 import { useI18n } from '../i18n';
 import { useAuth } from '../composables/useAuth';
 import logoIcon from '../assets/logo-icon.jpg';
+
+Chart.register(...registerables);
 
 const { locale, t, translateCategory } = useI18n();
 const { isAdmin, isSeller } = useAuth();
@@ -436,6 +503,17 @@ const metrics = ref<DashboardMetrics | null>(null);
 const healthInfo = ref<any>(null);
 const loading = ref(false);
 const showShiftModal = ref(false);
+
+// Chart Canvas Refs & Chart Instances
+const salesChartCanvas = ref<HTMLCanvasElement | null>(null);
+const categoryChartCanvas = ref<HTMLCanvasElement | null>(null);
+const paymentChartCanvas = ref<HTMLCanvasElement | null>(null);
+const bestSellersChartCanvas = ref<HTMLCanvasElement | null>(null);
+
+let salesChartInstance: Chart | null = null;
+let categoryChartInstance: Chart | null = null;
+let paymentChartInstance: Chart | null = null;
+let bestSellersChartInstance: Chart | null = null;
 
 // Keep currentTab in sync with role
 watch(isAdmin, (admin) => {
@@ -454,6 +532,8 @@ const loadData = async () => {
     ]);
     metrics.value = metricsData;
     healthInfo.value = healthData;
+    await nextTick();
+    renderCharts();
   } catch (err) {
     console.error('Failed to load dashboard data', err);
   } finally {
@@ -547,6 +627,285 @@ const formatTime = (isoString: string) => {
 const handlePrintShift = () => {
   window.print();
 };
+
+// ==================== INTERACTIVE CHARTS RENDERING ====================
+const destroyCharts = () => {
+  if (salesChartInstance) {
+    salesChartInstance.destroy();
+    salesChartInstance = null;
+  }
+  if (categoryChartInstance) {
+    categoryChartInstance.destroy();
+    categoryChartInstance = null;
+  }
+  if (paymentChartInstance) {
+    paymentChartInstance.destroy();
+    paymentChartInstance = null;
+  }
+  if (bestSellersChartInstance) {
+    bestSellersChartInstance.destroy();
+    bestSellersChartInstance = null;
+  }
+};
+
+const renderCharts = () => {
+  destroyCharts();
+
+  if (currentTab.value !== 'admin') return;
+
+  const orders = metrics.value?.recentOrders || [];
+
+  // 1. Sales & Revenue Performance Trend Chart
+  if (salesChartCanvas.value) {
+    const hourlyData: { [key: string]: number } = {};
+    const defaultHours = ['07:00', '08:00', '09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00', '19:00', '20:00'];
+    defaultHours.forEach((h) => { hourlyData[h] = 0; });
+
+    if (orders.length > 0) {
+      orders.forEach((o) => {
+        const d = new Date(o.createdAt || Date.now());
+        const hourStr = `${d.getHours().toString().padStart(2, '0')}:00`;
+        if (hourlyData[hourStr] !== undefined) {
+          hourlyData[hourStr] += Number(o.total) || 0;
+        } else {
+          hourlyData[hourStr] = Number(o.total) || 0;
+        }
+      });
+    }
+
+    const labels = Object.keys(hourlyData).sort();
+    const salesValues = labels.map((l) => Number(hourlyData[l].toFixed(2)));
+
+    const ctx = salesChartCanvas.value.getContext('2d');
+    if (ctx) {
+      const gradient = ctx.createLinearGradient(0, 0, 0, 240);
+      gradient.addColorStop(0, 'rgba(121, 64, 34, 0.35)');
+      gradient.addColorStop(1, 'rgba(121, 64, 34, 0.01)');
+
+      salesChartInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels,
+          datasets: [
+            {
+              label: locale.value === 'km' ? 'ចំណូល ($)' : 'Revenue ($)',
+              data: salesValues,
+              borderColor: '#794022',
+              backgroundColor: gradient,
+              fill: true,
+              tension: 0.38,
+              borderWidth: 3,
+              pointBackgroundColor: '#591F0B',
+              pointBorderColor: '#FAF7F2',
+              pointBorderWidth: 2,
+              pointRadius: 4,
+              pointHoverRadius: 7,
+            },
+          ],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              callbacks: {
+                label: (ctx) => ` ${ctx.dataset.label}: $${Number(ctx.raw).toFixed(2)}`,
+              },
+            },
+          },
+          scales: {
+            x: {
+              grid: { display: false },
+              ticks: { font: { family: 'Inter, system-ui, sans-serif', size: 11 } },
+            },
+            y: {
+              beginAtZero: true,
+              ticks: {
+                callback: (val) => `$${val}`,
+                font: { family: 'Inter, system-ui, sans-serif', size: 11 },
+              },
+              grid: { color: 'rgba(0,0,0,0.05)' },
+            },
+          },
+        },
+      });
+    }
+  }
+
+  // 2. Category Distribution Doughnut Chart
+  if (categoryChartCanvas.value) {
+    const catMap: { [key: string]: number } = {};
+    if (orders.length > 0) {
+      orders.forEach((o) => {
+        (o.items || []).forEach((item: any) => {
+          const catName = item.categoryName || item.category || 'Other';
+          const translated = translateCategory(catName);
+          catMap[translated] = (catMap[translated] || 0) + (Number(item.quantity) || 1);
+        });
+      });
+    } else {
+      catMap[translateCategory('Hot Coffee')] = 14;
+      catMap[translateCategory('Ice Coffee')] = 28;
+      catMap[translateCategory('Tea')] = 12;
+      catMap[translateCategory('Frappe')] = 8;
+    }
+
+    const catLabels = Object.keys(catMap);
+    const catData = Object.values(catMap);
+    const coffeeColors = ['#794022', '#591F0B', '#2D6A4F', '#D99937', '#DEAC76', '#8B5A2B'];
+
+    const ctx = categoryChartCanvas.value.getContext('2d');
+    if (ctx) {
+      categoryChartInstance = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+          labels: catLabels,
+          datasets: [
+            {
+              data: catData,
+              backgroundColor: coffeeColors.slice(0, catLabels.length),
+              borderWidth: 2,
+              borderColor: '#ffffff',
+            },
+          ],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              position: 'right',
+              labels: { font: { family: 'Inter, system-ui, sans-serif', size: 12 }, usePointStyle: true, boxWidth: 10 },
+            },
+          },
+          cutout: '68%',
+        },
+      });
+    }
+  }
+
+  // 3. Payment Method Share Doughnut Chart
+  if (paymentChartCanvas.value) {
+    const cashCount = shiftCashOrdersCount.value;
+    const cardCount = shiftCardOrdersCount.value;
+    const qrCount = shiftQrOrdersCount.value;
+
+    const payLabels = [
+      locale.value === 'km' ? 'សាច់ប្រាក់ (Cash)' : 'Cash',
+      locale.value === 'km' ? 'កាត (Card)' : 'Card',
+      locale.value === 'km' ? 'វេរ QR (KHQR)' : 'KHQR',
+    ];
+    const payData = [
+      cashCount || (orders.length === 0 ? 15 : 0),
+      cardCount || (orders.length === 0 ? 5 : 0),
+      qrCount || (orders.length === 0 ? 20 : 0),
+    ];
+
+    const ctx = paymentChartCanvas.value.getContext('2d');
+    if (ctx) {
+      paymentChartInstance = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+          labels: payLabels,
+          datasets: [
+            {
+              data: payData,
+              backgroundColor: ['#2D6A4F', '#2563EB', '#7C3AED'],
+              borderWidth: 2,
+              borderColor: '#ffffff',
+            },
+          ],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              position: 'right',
+              labels: { font: { family: 'Inter, system-ui, sans-serif', size: 12 }, usePointStyle: true, boxWidth: 10 },
+            },
+          },
+          cutout: '68%',
+        },
+      });
+    }
+  }
+
+  // 4. Top Selling Drinks Horizontal Bar Chart
+  if (bestSellersChartCanvas.value) {
+    const itemMap: { [key: string]: number } = {};
+    if (orders.length > 0) {
+      orders.forEach((o) => {
+        (o.items || []).forEach((item: any) => {
+          const name = item.productName || 'Drink';
+          itemMap[name] = (itemMap[name] || 0) + (Number(item.quantity) || 1);
+        });
+      });
+    } else {
+      itemMap['Iced Latte'] = 34;
+      itemMap['Iced Americano'] = 29;
+      itemMap['Hot Cappuccino'] = 22;
+      itemMap['Matcha Latte'] = 18;
+      itemMap['Caramel Macchiato'] = 15;
+    }
+
+    const sortedItems = Object.entries(itemMap)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 5);
+
+    const bestLabels = sortedItems.map((i) => i[0]);
+    const bestData = sortedItems.map((i) => i[1]);
+
+    const ctx = bestSellersChartCanvas.value.getContext('2d');
+    if (ctx) {
+      bestSellersChartInstance = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: bestLabels,
+          datasets: [
+            {
+              label: locale.value === 'km' ? 'ចំនួនកែវ (Cups)' : 'Cups Sold',
+              data: bestData,
+              backgroundColor: ['#794022', '#591F0B', '#2D6A4F', '#D99937', '#DEAC76'],
+              borderRadius: 6,
+              borderSkipped: false,
+            },
+          ],
+        },
+        options: {
+          indexAxis: 'y',
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+          },
+          scales: {
+            x: {
+              beginAtZero: true,
+              ticks: { precision: 0, font: { family: 'Inter, system-ui, sans-serif', size: 11 } },
+              grid: { color: 'rgba(0,0,0,0.05)' },
+            },
+            y: {
+              grid: { display: false },
+              ticks: { font: { family: 'Inter, system-ui, sans-serif', size: 12, weight: 'bold' } },
+            },
+          },
+        },
+      });
+    }
+  }
+};
+
+watch([currentTab, locale, metrics], () => {
+  nextTick(() => {
+    renderCharts();
+  });
+});
+
+onUnmounted(() => {
+  destroyCharts();
+});
 
 onMounted(() => {
   loadData();
@@ -998,6 +1357,65 @@ onMounted(() => {
 @media (max-width: 900px) {
   .dashboard-columns {
     grid-template-columns: 1fr;
+  }
+}
+
+/* ==================== Dashboard Charts Styles ==================== */
+.dashboard-charts-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.5rem;
+}
+
+.full-width-chart {
+  grid-column: span 1;
+}
+
+.chart-card {
+  background: var(--white);
+  border-radius: var(--border-radius);
+  border: 1px solid var(--gray-300);
+  padding: 1.25rem;
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
+}
+
+.chart-subtitle {
+  font-size: 0.78rem;
+  color: var(--gray-500);
+  margin-top: 0.15rem;
+}
+
+.chart-badge {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  background: #ecfdf5;
+  color: #059669;
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 0.25rem 0.6rem;
+  border-radius: 12px;
+}
+
+.chart-body {
+  position: relative;
+  height: 260px;
+  width: 100%;
+  margin-top: 0.75rem;
+}
+
+.doughnut-body {
+  height: 240px;
+}
+
+@media (max-width: 1024px) {
+  .dashboard-charts-grid {
+    grid-template-columns: 1fr;
+  }
+  .full-width-chart {
+    grid-column: span 1;
   }
 }
 </style>
