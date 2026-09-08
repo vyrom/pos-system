@@ -288,11 +288,11 @@ export const posApi = {
     return res.data;
   },
 
-  // Products & Drink Recipes
-  getProducts: async (category?: string, search?: string): Promise<Product[]> => {
+  getProducts: async (category?: string, search?: string, includeDisabled?: boolean): Promise<Product[]> => {
     const params: Record<string, string> = {};
     if (category && category !== 'All') params.category = category;
     if (search) params.search = search;
+    if (includeDisabled) params.includeDisabled = 'true';
     const res = await api.get('/pos/products', { params });
     return res.data;
   },

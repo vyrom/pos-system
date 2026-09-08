@@ -100,12 +100,15 @@ export class PosController {
   @ApiOperation({ summary: 'Get all drinks with dynamically calculated available cups from ingredient stock' })
   @ApiQuery({ name: 'category', required: false, type: String })
   @ApiQuery({ name: 'search', required: false, type: String })
+  @ApiQuery({ name: 'includeDisabled', required: false, type: Boolean })
   @ApiResponse({ status: 200, description: 'List of products', type: [Product] })
   getProducts(
     @Query('category') category?: string,
     @Query('search') search?: string,
+    @Query('includeDisabled') includeDisabled?: string,
   ): Product[] {
-    return this.posService.getProducts(category, search);
+    const showDisabled = includeDisabled === 'true' || includeDisabled === '1';
+    return this.posService.getProducts(category, search, showDisabled);
   }
 
   @Get('products/:id')

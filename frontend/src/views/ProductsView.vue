@@ -1138,7 +1138,7 @@ const loadData = async () => {
   try {
     const [cats, prods] = await Promise.all([
       posApi.getCategories(),
-      posApi.getProducts(selectedCategory.value, searchQuery.value),
+      posApi.getProducts(selectedCategory.value, searchQuery.value, true),
       posStore.fetchIngredients(),
     ]);
     categories.value = cats;
@@ -1158,7 +1158,7 @@ let debounceTimer: any = null;
 const filterProducts = () => {
   clearTimeout(debounceTimer);
   debounceTimer = setTimeout(() => {
-    posApi.getProducts(selectedCategory.value, searchQuery.value).then((res) => {
+    posApi.getProducts(selectedCategory.value, searchQuery.value, true).then((res) => {
       products.value = res;
     });
   }, 250);
